@@ -1,0 +1,2899 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ZenParts — Автосервіс та CRM</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body {
+background-color: #111827;
+color: #f3f4f6;
+font-family: system-ui, -apple-system, sans-serif;
+-webkit-tap-highlight-color: transparent;
+}
+button {
+cursor: pointer;
+touch-action: manipulation;
+}
+@media print {
+body { background-color: #ffffff !important; color: #000000 !important; }
+.no-print, header, main, #order-modal, #auth-screen, #settings-modal, #client-settings-modal, #client-card-modal, #chat-modal, #part-offer-modal { display: none !important; }
+#invoice-modal { position: static !important; display: block !important; background: none !important; padding: 0 !important; }
+#invoice-modal > div { border: none !important; box-shadow: none !important; max-width: 100% !important; max-height: none !important; padding: 0 !important; background: #ffffff !important; }
+}
+
+:root{--gold:#b08d4a;--gold-d:#8f6f33;--ink:#1a1a1a;--paper:#f7f6f6;--line:#e6e0d4}
+body{font-family:'Montserrat',system-ui,-apple-system,sans-serif!important;background:var(--paper)!important;color:var(--ink)!important;padding-bottom:env(safe-area-inset-bottom)}
+h1,h2,h3,h4{letter-spacing:.02em}
+.zp-logo{mix-blend-mode:multiply}
+header{background:rgba(255,255,255,.92)!important;backdrop-filter:blur(14px);border-bottom:2px solid var(--gold)!important;padding-top:env(safe-area-inset-top)}
+[class~="bg-gray-900"],[class~="bg-gray-900/60"],[class~="bg-gray-900/70"],[class~="bg-gray-900/50"],[class~="bg-gray-900/40"]{background:#faf8f4!important}
+[class~="bg-gray-800"]{background:#fff!important;backdrop-filter:none}
+[class~="bg-gray-700"],[class~="bg-gray-700/50"]{background:#eeeae1!important}
+[class*="border-gray-"]{border-color:var(--line)!important}
+[class~="divide-gray-700"]>:not([hidden])~:not([hidden]){border-color:var(--line)!important}
+[class~="text-white"],[class~="text-gray-100"],[class~="text-gray-200"]{color:var(--ink)!important}
+[class~="text-gray-300"]{color:#4a463f!important}[class~="text-gray-400"]{color:#6e685d!important}[class~="text-gray-500"]{color:#8c8579!important}
+[class~="text-blue-400"],[class~="text-blue-300"],[class~="text-amber-300"],[class~="text-yellow-400"]{color:var(--gold-d)!important}
+[class~="text-emerald-400"]{color:#2f7a52!important}[class~="text-red-400"]{color:#c0392b!important}
+[class~="bg-blue-600"],[class~="hover:bg-blue-500"]:hover{background:linear-gradient(135deg,var(--gold),var(--gold-d))!important;color:#fff!important}
+[class~="bg-emerald-600"],[class~="hover:bg-emerald-500"]:hover{background:var(--ink)!important;color:#fff!important}
+[class~="bg-blue-600"] *,[class~="bg-emerald-600"] *{color:inherit!important}
+tr:hover,[class*="hover:bg-gray-700"]:hover{background:#f4efe4!important}
+thead{background:#eeeae1!important}
+input,select,textarea{font-size:16px!important;color:var(--ink)!important}
+input::placeholder,textarea::placeholder{color:#a29b8d!important}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)!important;box-shadow:0 0 0 3px #b08d4a33;outline:none}
+[class~="rounded-2xl"][class~="shadow"],#auth-screen>div{box-shadow:0 10px 30px -14px rgba(60,45,15,.25)}
+#auth-screen{background:linear-gradient(180deg,#fff,var(--paper))!important}
+button{transition:transform .12s,filter .15s}button:active{transform:scale(.96)}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#cfc6b3;border-radius:9px}
+#client-chat-messages>div>div,#mgr-chat-messages>div>div{box-shadow:0 2px 8px rgba(60,45,15,.12);word-break:break-word}
+#client-chat-messages img,#mgr-chat-messages img{max-width:min(240px,100%)}
+#toast{background:var(--ink)!important;border-color:var(--gold)!important;color:#fff!important;position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-140%);transition:transform .35s;z-index:90;max-width:92vw}
+#toast.show{transform:translate(-50%,0)}
+@media(max-width:640px){#client-container .h-\[520px\]{height:calc(100dvh - 230px)}#chat-modal>div{height:92dvh}}
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- ЕКРАН АВТОРИЗАЦІЇ / РЕЄСТРАЦІЇ -->
+<div id="auth-screen" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center p-4">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6">
+<div class="text-center space-y-2">
+<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 80'><rect width='240' height='80' rx='14' fill='%231a1a1a'/><text x='120' y='46' font-family='Montserrat,sans-serif' font-size='30' font-weight='800' fill='%23b08d4a' text-anchor='middle' letter-spacing='3'>ZENPARTS</text><text x='120' y='65' font-family='Montserrat,sans-serif' font-size='9' font-weight='600' fill='%23ffffff' text-anchor='middle' letter-spacing='5'>AUTO SERVICE</text></svg>" alt="ZenParts" class="zp-logo mx-auto h-20 w-auto">
+<h1 class="text-[11px] tracking-[.35em] font-semibold text-white">TRUCK · AUTO · SERVICE</h1>
+<p class="text-xs text-gray-400">Оберіть режим доступу до системи</p>
+</div>
+
+<!-- Вибір вкладок авторизації -->
+<div class="grid grid-cols-2 gap-2 bg-gray-900 p-1 rounded-xl border border-gray-700">
+<button type="button" onclick="switchAuthTab('client')" id="auth-tab-client" class="py-2.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow">Клієнт</button>
+<button type="button" onclick="switchAuthTab('manager')" id="auth-tab-manager" class="py-2.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white">Менеджер</button>
+</div>
+
+<!-- Форма входу Клієнта -->
+<form id="form-auth-client" onsubmit="handleClientLogin(event)" class="space-y-4">
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Номер телефону</label>
+<input type="tel" id="client-login-phone" name="phone" autocomplete="username" inputmode="tel" required placeholder="+380671234567" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 text-sm">
+</div>
+<div id="client-password-box">
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1" id="client-password-label">Пароль</label>
+<input type="password" id="client-login-pass" name="password" autocomplete="current-password" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 text-sm">
+</div>
+<p id="client-auth-error" class="text-xs text-red-400 hidden"></p>
+<button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition shadow text-sm">Увійти в кабінет</button>
+<div class="text-center pt-2">
+<button type="button" onclick="openRegisterModal()" class="text-xs text-blue-400 hover:underline">Ще не зареєстровані? Створити акаунт</button>
+</div>
+</form>
+
+<!-- Форма входу Менеджера -->
+<form id="form-auth-manager" onsubmit="handleManagerLogin(event)" class="space-y-4 hidden">
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Пароль менеджера</label>
+<input type="password" id="manager-auth-pass" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 text-sm">
+<p id="manager-auth-error" class="text-xs text-red-400 hidden">Невірний пароль!</p>
+</div>
+<button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl transition shadow text-sm">Вхід для керівництва</button>
+</form>
+
+<div class="text-center pt-2 border-t border-gray-700/60">
+<p class="text-[11px] text-gray-500">Синхронізація з хмарним сховищем</p>
+</div>
+</div>
+</div>
+
+<!-- МОДАЛКА САМОСТІЙНОЇ РЕЄСТРАЦІЇ КЛІЄНТА -->
+<div id="register-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-plus text-blue-500 mr-2"></i>Реєстрація клієнта</h3>
+<button type="button" onclick="closeRegisterModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+</div>
+<form onsubmit="handleClientRegister(event)" class="space-y-3">
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Ваше ПІБ / Ім'я</label>
+<input type="text" id="reg-name" required placeholder="Олександр" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Номер телефону</label>
+<input type="tel" id="reg-phone" required placeholder="+380671234567" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Придумайте пароль</label>
+<input type="password" id="reg-pass" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Марка та модель авто (опціонально)</label>
+<input type="text" id="reg-car" placeholder="Skoda Octavia A7" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Держ. номер або VIN (опціонально)</label>
+<input type="text" id="reg-plate" placeholder="BA7777BI" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm uppercase focus:outline-none focus:border-blue-500">
+</div>
+<p id="reg-error" class="text-xs text-red-400 hidden"></p>
+<div class="flex justify-end space-x-2 pt-2">
+<button type="button" onclick="closeRegisterModal()" class="px-4 py-2 bg-gray-700 text-gray-300 text-xs rounded-xl">Скасувати</button>
+<button type="submit" class="px-5 py-2 bg-blue-600 text-white text-xs font-medium rounded-xl shadow">Зареєструватися</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- КАБІНЕТ КЛІЄНТА -->
+<div id="client-container" class="min-h-screen flex flex-col hidden">
+<header class="bg-gray-800 border-b border-gray-700 shadow-lg sticky top-0 z-30">
+<div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+<div class="flex items-center space-x-3">
+<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'><rect width='100' height='60' rx='12' fill='%231a1a1a'/><text x='50' y='41' font-family='Montserrat,sans-serif' font-size='32' font-weight='800' fill='%23b08d4a' text-anchor='middle'>ZP</text></svg>" alt="ZP" class="zp-logo h-10 w-auto">
+<div>
+<h1 id="client-header-name" class="text-base sm:text-lg font-bold text-white">Клієнт</h1>
+<p class="text-xs text-emerald-400 font-medium" id="client-header-bonus">Знижка: 0%</p>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<button type="button" onclick="openClientSettingsModal()" class="p-2 rounded-xl bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm"><i class="fa-solid fa-gear"></i></button>
+<button type="button" onclick="logoutClient()" class="p-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 text-sm" title="Вийти"><i class="fa-solid fa-right-from-bracket"></i></button>
+</div>
+</div>
+</header>
+
+<main class="flex-grow max-w-4xl w-full mx-auto px-3 sm:px-4 py-5 space-y-6">
+<div class="grid grid-cols-4 gap-1.5 sm:gap-2 bg-gray-800 p-1.5 rounded-2xl border border-gray-700 shadow">
+<button type="button" onclick="switchClientTab('orders')" id="c-btn-orders" class="py-2.5 rounded-xl bg-blue-600 text-white text-[11px] sm:text-xs font-semibold shadow transition flex items-center justify-center space-x-1"><i class="fa-solid fa-file-invoice"></i><span class="hidden sm:inline">Замовлення</span></button>
+<button type="button" onclick="switchClientTab('neworder')" id="c-btn-neworder" class="py-2.5 rounded-xl bg-gray-700 text-gray-300 text-[11px] sm:text-xs font-semibold transition flex items-center justify-center space-x-1"><i class="fa-solid fa-plus-circle"></i><span>Нова заявка</span></button>
+<button type="button" onclick="switchClientTab('vehicles')" id="c-btn-vehicles" class="py-2.5 rounded-xl bg-gray-700 text-gray-300 text-[11px] sm:text-xs font-semibold transition flex items-center justify-center space-x-1"><i class="fa-solid fa-car-side"></i><span class="hidden sm:inline">Мої авто</span></button>
+<button type="button" onclick="switchClientTab('chat')" id="c-btn-chat" class="relative py-2.5 rounded-xl bg-gray-700 text-gray-300 text-[11px] sm:text-xs font-semibold transition flex items-center justify-center space-x-1">
+<i class="fa-solid fa-comments"></i><span>Чат</span>
+<span id="client-chat-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 items-center justify-center">!</span>
+</button>
+</div>
+
+<section id="c-tab-orders" class="space-y-4">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow space-y-4">
+<h3 class="text-base font-bold text-white flex items-center"><i class="fa-solid fa-clock-rotate-left text-blue-400 mr-2"></i>Мої наряд-замовлення та заявки</h3>
+<div id="client-orders-list" class="space-y-4">
+<p class="text-gray-500 text-sm text-center py-4">У вас поки немає замовлень</p>
+</div>
+</div>
+</section>
+
+<section id="c-tab-neworder" class="hidden space-y-4">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow space-y-4">
+<h3 class="text-base font-bold text-white flex items-center"><i class="fa-solid fa-paper-plane text-blue-400 mr-2"></i>Створити заявку на запчастини</h3>
+<form onsubmit="submitClientOrder(event)" class="space-y-4">
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Оберіть ваше авто</label>
+<select id="client-order-car" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+<option value="">-- Виберіть транспортний засіб --</option>
+</select>
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Перелік запчастин / Що шукаєте?</label>
+<textarea id="client-order-desc" rows="4" required placeholder="Наприклад: Передні гальмівні колодки, фільтр масляний, комплект ГРМ або опишіть проблему..." class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500"></textarea>
+</div>
+<button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition shadow text-sm">Надіслати заявку менеджеру</button>
+</form>
+</div>
+</section>
+
+<section id="c-tab-vehicles" class="hidden space-y-4">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="text-base font-bold text-white flex items-center"><i class="fa-solid fa-car-side text-blue-400 mr-2"></i>Гараж (Мої автомобілі)</h3>
+<button type="button" onclick="openAddVehicleModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3 py-2 rounded-xl transition shadow"><i class="fa-solid fa-plus mr-1"></i>Додати авто</button>
+</div>
+<div id="client-vehicles-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+</div>
+</section>
+
+<section id="c-tab-chat" class="hidden space-y-4">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow flex flex-col h-[520px]">
+<h3 class="text-base font-bold text-white flex items-center mb-3"><i class="fa-solid fa-comments text-blue-400 mr-2"></i>Чат з менеджером ZenParts</h3>
+<div id="client-chat-messages" class="flex-grow overflow-y-auto space-y-3 p-3 bg-gray-900/60 rounded-xl border border-gray-700/60 mb-3"></div>
+<form onsubmit="sendClientChatMessage(event)" class="flex gap-2 items-center">
+<label class="p-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl cursor-pointer text-sm" title="Додати фото">
+<i class="fa-solid fa-camera"></i>
+<input type="file" id="client-file-input" accept="image/*" onchange="handleClientImageUpload(event)" class="hidden">
+</label>
+<input type="text" id="client-chat-input" placeholder="Напишіть повідомлення..." class="flex-grow bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+<button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition"><i class="fa-solid fa-paper-plane"></i></button>
+</form>
+</div>
+</section>
+</main>
+</div>
+
+<div id="vehicle-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="text-base font-bold text-white">Додати автомобіль</h3>
+<button type="button" onclick="closeAddVehicleModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+</div>
+<form onsubmit="saveClientVehicle(event)" class="space-y-3">
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Марка та модель</label>
+<input type="text" id="v-model" required placeholder="Skoda Octavia A7" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Державний номер або VIN</label>
+<input type="text" id="v-plate" required placeholder="BA7777BI" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-blue-500">
+</div>
+<div class="flex justify-end space-x-2 pt-2">
+<button type="button" onclick="closeAddVehicleModal()" class="px-4 py-2 bg-gray-700 text-gray-300 text-xs rounded-xl">Скасувати</button>
+<button type="submit" class="px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-xl shadow">Зберегти авто</button>
+</div>
+</form>
+</div>
+</div>
+
+<div id="client-settings-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="text-lg font-bold text-white"><i class="fa-solid fa-gear text-blue-500 mr-2"></i>Налаштування профілю</h3>
+<button type="button" onclick="closeClientSettingsModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+</div>
+<form onsubmit="changeClientPassword(event)" class="space-y-3">
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Новий пароль</label>
+<input type="password" id="c-new-pass" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Підтвердіть пароль</label>
+<input type="password" id="c-conf-pass" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+</div>
+<p id="c-settings-msg" class="text-xs text-emerald-400 hidden"></p>
+<div class="flex justify-end space-x-2 pt-2">
+<button type="button" onclick="closeClientSettingsModal()" class="px-4 py-2 bg-gray-700 text-gray-300 text-xs rounded-xl">Закрити</button>
+<button type="submit" class="px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-xl shadow">Змінити пароль</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- ОСНОВНИЙ ДОДАТОК МЕНЕДЖЕРА (CRM) -->
+<div id="manager-container" class="min-h-screen flex flex-col hidden">
+<header class="bg-gray-800 border-b border-gray-700 shadow-lg no-print sticky top-0 z-30">
+<div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+<div class="flex items-center justify-between w-full sm:w-auto">
+<div class="flex items-center space-x-3">
+<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'><rect width='100' height='60' rx='12' fill='%231a1a1a'/><text x='50' y='41' font-family='Montserrat,sans-serif' font-size='32' font-weight='800' fill='%23b08d4a' text-anchor='middle'>ZP</text></svg>" alt="ZP" class="zp-logo h-10 w-auto">
+<div>
+<h1 class="text-lg sm:text-xl font-bold tracking-wide text-white">ZenParts CRM</h1>
+<p class="text-xs text-gray-400 flex items-center gap-1.5"><span id="autosave-status" class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>Хмару підключено</p>
+</div>
+</div>
+<div class="flex items-center space-x-1 sm:hidden">
+<button type="button" onclick="openInviteModal()" title="Запросити клієнта" class="p-2 rounded-xl bg-blue-600 text-white text-sm"><i class="fa-solid fa-user-plus"></i></button>
+<button type="button" onclick="openSettingsModal()" title="Налаштування" class="p-2 rounded-lg bg-gray-700 text-gray-300 text-sm"><i class="fa-solid fa-gear"></i></button>
+<button type="button" onclick="logoutManager()" title="Вийти" class="p-2 rounded-lg bg-red-600/20 text-red-400 text-sm"><i class="fa-solid fa-right-from-bracket"></i></button>
+</div>
+</div>
+
+<div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+<nav class="grid grid-cols-5 sm:flex gap-1.5 w-full sm:w-auto">
+<button type="button" onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5 shadow"><i class="fa-solid fa-chart-pie"></i><span class="hidden sm:inline">Дашборд</span></button>
+<button type="button" onclick="switchTab('new')" id="btn-new" class="relative px-3 py-2 rounded-xl bg-gray-700 text-gray-200 text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5"><i class="fa-solid fa-bell"></i><span class="hidden sm:inline">Нові</span><span id="new-badge" class="hidden absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 items-center justify-center">0</span></button>
+<button type="button" onclick="switchTab('clients')" id="btn-clients" class="relative px-3 py-2 rounded-xl bg-gray-700 text-gray-200 text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5">
+    <i class="fa-solid fa-users"></i><span class="hidden sm:inline">Клієнти</span>
+    <span id="mgr-chat-badge" class="hidden absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 items-center justify-center">0</span>
+</button>
+<button type="button" onclick="switchTab('warehouse')" id="btn-warehouse" class="px-3 py-2 rounded-xl bg-gray-700 text-gray-200 text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5"><i class="fa-solid fa-boxes-stacked"></i><span class="hidden sm:inline">Склад</span></button>
+<button type="button" onclick="switchTab('orders')" id="btn-orders" class="px-3 py-2 rounded-xl bg-gray-700 text-gray-200 text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5"><i class="fa-solid fa-file-invoice-dollar"></i><span class="hidden sm:inline">Замовлення</span></button>
+</nav>
+
+<div class="hidden sm:flex items-center space-x-1.5 border-l border-gray-700 pl-2">
+<button type="button" onclick="openInviteModal()" title="Запросити клієнта" class="p-2 rounded-xl bg-blue-600 text-white text-sm"><i class="fa-solid fa-user-plus"></i></button>
+<button type="button" onclick="openSettingsModal()" title="Налаштування" class="p-2 rounded-xl bg-gray-700 text-gray-300 transition"><i class="fa-solid fa-gear"></i></button>
+<button type="button" onclick="exportData()" title="Експорт бази" class="p-2 rounded-xl bg-gray-700 text-gray-300 transition"><i class="fa-solid fa-download"></i></button>
+<button type="button" onclick="logoutManager()" title="Вийти з кабінету" class="p-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+</div>
+</div>
+</div>
+</header>
+
+<main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-4 py-5">
+<section id="tab-dashboard" class="space-y-6">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+<div class="bg-gray-800 border border-gray-700 p-4 sm:p-5 rounded-2xl shadow">
+<p class="text-xs text-gray-400">Всього клієнтів</p>
+<h3 id="stat-clients" class="text-xl sm:text-2xl font-bold mt-1 text-white">0</h3>
+</div>
+<div class="bg-gray-800 border border-gray-700 p-4 sm:p-5 rounded-2xl shadow">
+<p class="text-xs text-gray-400">Замовлень</p>
+<h3 id="stat-orders" class="text-xl sm:text-2xl font-bold mt-1 text-white">0</h3>
+</div>
+<div class="bg-gray-800 border border-gray-700 p-4 sm:p-5 rounded-2xl shadow">
+<p class="text-xs text-gray-400">Виручка (видані й оплачені)</p>
+<h3 id="stat-revenue" class="text-lg sm:text-2xl font-bold mt-1 text-emerald-400">0 грн</h3>
+</div>
+<div class="bg-gray-800 border border-gray-700 p-4 sm:p-5 rounded-2xl shadow">
+<p class="text-xs text-gray-400">Чистий прибуток</p>
+<h3 id="stat-profit" class="text-lg sm:text-2xl font-bold mt-1 text-blue-400">0 грн</h3>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow space-y-4">
+<h3 class="text-base font-semibold text-gray-200"><i class="fa-solid fa-chart-pie text-blue-400 mr-2"></i>Аналітика продажу</h3>
+<div class="space-y-3 text-sm">
+<div class="flex justify-between p-3 bg-gray-900/60 rounded-xl border border-gray-700/50"><span class="text-gray-400">Заробіток на роботах:</span><span id="analytics-work-revenue" class="font-bold text-white">0.00 грн</span></div>
+<div class="flex justify-between p-3 bg-gray-900/60 rounded-xl border border-gray-700/50"><span class="text-gray-400">Продаж запчастин:</span><span id="analytics-parts-revenue" class="font-bold text-white">0.00 грн</span></div>
+<div class="flex justify-between p-3 bg-gray-900/60 rounded-xl border border-gray-700/50"><span class="text-gray-400">Собівартість запчастин:</span><span id="analytics-parts-cost" class="font-bold text-amber-400">0.00 грн</span></div>
+<div class="flex justify-between p-3 bg-blue-950/30 rounded-xl border border-blue-500/30"><span class="text-blue-300 font-medium">Маржа:</span><span id="analytics-parts-profit" class="font-bold text-emerald-400">0.00 грн</span></div>
+</div>
+</div>
+<div class="lg:col-span-2 bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow">
+<div class="flex justify-between items-center mb-4"><h3 class="text-base font-semibold text-gray-200">Останні наряд-замовлення</h3><button type="button" onclick="switchTab('orders')" class="text-xs text-blue-400 hover:underline">Всі →</button></div>
+<div class="overflow-x-auto"><table class="w-full text-left text-sm text-gray-300"><thead class="bg-gray-700/50 uppercase text-xs text-gray-400"><tr><th class="p-3">№</th><th class="p-3">Дата</th><th class="p-3">Клієнт</th><th class="p-3">Авто</th><th class="p-3">Сума</th><th class="p-3">Статус</th></tr></thead><tbody id="recent-orders-list" class="divide-y divide-gray-700"><tr><td colspan="6" class="p-4 text-center text-gray-500">Немає даних</td></tr></tbody></table></div>
+</div>
+</div>
+</section>
+
+<section id="tab-new" class="hidden space-y-4">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow space-y-4">
+<h3 class="text-base font-bold text-white flex items-center"><i class="fa-solid fa-bell text-red-400 mr-2"></i>Нові замовлення та заявки від клієнтів</h3>
+<div id="new-orders-list" class="space-y-3"></div>
+</div>
+</section>
+
+<section id="tab-warehouse" class="hidden space-y-6">
+<div id="ware-pending-box" class="hidden bg-gray-800 border border-amber-500/40 rounded-2xl p-4 sm:p-5 shadow space-y-3"><h3 class="text-base font-bold text-white"><i class="fa-solid fa-hourglass-half text-amber-500 mr-2"></i>Очікують оприбуткування від постачальника</h3><div id="ware-pending-list" class="space-y-2"></div></div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 sm:p-6 shadow h-fit">
+<h3 id="ware-form-title" class="text-lg font-semibold mb-4 text-gray-200 flex items-center space-x-2"><i class="fa-solid fa-boxes-stacked text-blue-500"></i><span>Оприбуткувати товар</span></h3>
+<form id="warehouse-form" onsubmit="saveWarehouseItem(event)" class="space-y-4">
+<input type="hidden" id="ware-edit-id" value="">
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Найменування</label><input type="text" id="ware-name" required placeholder="Мастило 5W-30" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white"></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Постачальник</label><input type="text" id="ware-supplier" required placeholder="Назва постачальника" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white"></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Каталожний номер</label><input type="text" id="ware-catno" placeholder="напр. 04E115561H" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white uppercase"></div>
+<div class="grid grid-cols-2 gap-3">
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Кількість</label><input type="number" id="ware-qty" required min="0" step="any" placeholder="10" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white"></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Одиниця</label><select id="ware-unit" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white"><option value="шт">шт</option><option value="л">л</option><option value="компл">компл</option></select></div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Закупка</label><input type="number" id="ware-cost" required min="0" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white"></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Продаж</label><input type="number" id="ware-price" required min="0" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white"></div>
+</div>
+<div class="flex gap-2"><button type="submit" id="ware-submit-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition">Додати</button><button type="button" id="ware-cancel-btn" onclick="resetWarehouseForm()" class="hidden px-4 py-2.5 bg-gray-700 text-gray-300 rounded-xl">Скасувати</button></div>
+</form>
+</div>
+<div class="lg:col-span-2 bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow flex flex-col">
+<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-200">Залишки</h3><input type="text" id="warehouse-search" oninput="renderWarehouse()" placeholder="Пошук..." class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white w-64"></div>
+<div class="overflow-x-auto flex-grow"><table class="w-full text-left text-sm text-gray-300"><thead class="bg-gray-700/50 uppercase text-xs text-gray-400"><tr><th class="p-3">Найменування / Постачальник</th><th class="p-3 text-center">Залишок</th><th class="p-3 text-right">Закупка</th><th class="p-3 text-right">Продаж</th><th class="p-3 text-right">Дії</th></tr></thead><tbody id="warehouse-table-body" class="divide-y divide-gray-700"></tbody></table></div>
+</div>
+</div>
+</section>
+
+<section id="tab-clients" class="hidden space-y-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 sm:p-6 shadow h-fit">
+<h3 id="client-form-title" class="text-lg font-semibold mb-4 text-gray-200 flex items-center space-x-2"><i class="fa-solid fa-user-plus text-blue-500"></i><span>Новий клієнт</span></h3>
+<form id="client-form" onsubmit="saveClient(event)" class="space-y-4">
+<input type="hidden" id="client-edit-id" value="">
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">ПІБ Клієнта</label><input type="text" id="client-name" required placeholder="Іванов Іван" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white"></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Телефон</label><input type="tel" id="client-phone" required placeholder="+380671234567" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white"></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Марка авто</label><input type="text" id="client-car" required placeholder="Skoda Octavia" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white"></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Держ. номер</label><input type="text" id="client-plate" required placeholder="BA7777BI" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white uppercase"></div>
+<div class="flex gap-2"><button type="submit" id="client-submit-btn" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl">Зберегти</button><button type="button" id="client-cancel-btn" onclick="resetClientForm()" class="hidden px-4 py-2.5 bg-gray-700 text-gray-300 rounded-xl">Скасувати</button></div>
+</form>
+</div>
+<div class="lg:col-span-2 bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow flex flex-col">
+<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-200">База клієнтів</h3><input type="text" id="client-search" oninput="renderClients()" placeholder="Пошук..." class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white w-72"></div>
+<div class="overflow-x-auto flex-grow"><table class="w-full text-left text-sm text-gray-300"><thead class="bg-gray-700/50 uppercase text-xs text-gray-400"><tr><th class="p-3">ID</th><th class="p-3">ПІБ / Телефон</th><th class="p-3">Автомобіль</th><th class="p-3">Знижка</th><th class="p-3 text-right">Дії</th></tr></thead><tbody id="clients-table-body" class="divide-y divide-gray-700"></tbody></table></div>
+</div>
+</div>
+</section>
+
+<section id="tab-orders" class="hidden space-y-6">
+<div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 bg-gray-800 border border-gray-700 p-4 rounded-2xl shadow">
+    <!-- Перемикач: Активні / Архів -->
+    <div class="flex bg-gray-900 p-1 rounded-xl border border-gray-700">
+        <button type="button" onclick="switchOrdersSubTab('active')" id="orders-subtab-active" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-gears"></i><span>В роботі (Активні)</span>
+            <span id="count-orders-active" class="px-1.5 py-0.5 text-[10px] rounded-full bg-black/20">0</span>
+        </button>
+        <button type="button" onclick="switchOrdersSubTab('archive')" id="orders-subtab-archive" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-box-archive"></i><span>Архів (Видані)</span>
+            <span id="count-orders-archive" class="px-1.5 py-0.5 text-[10px] rounded-full bg-black/20">0</span>
+        </button>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <input type="text" id="order-search" oninput="renderOrders()" placeholder="Пошук замовлень..." class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white w-full sm:w-64">
+        <button type="button" onclick="openNewOrderModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-2.5 rounded-xl shadow flex items-center justify-center space-x-2 whitespace-nowrap"><i class="fa-solid fa-plus"></i><span>Створити замовлення</span></button>
+    </div>
+</div>
+<div class="bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 shadow">
+<div class="overflow-x-auto"><table class="w-full text-left text-sm text-gray-300"><thead class="bg-gray-700/50 uppercase text-xs text-gray-400"><tr><th class="p-3">№ / Дата</th><th class="p-3">Клієнт / Авто</th><th class="p-3">Пробіг</th><th class="p-3">Сума</th><th class="p-3">Статус та Оплата</th><th class="p-3 text-right">Дії</th></tr></thead><tbody id="orders-table-body" class="divide-y divide-gray-700"></tbody></table></div>
+</div>
+</section>
+</main>
+</div>
+
+<!-- МОДАЛКА ПІДБОРУ ЗАПЧАСТИН МЕНЕДЖЕРОМ -->
+<div id="part-offer-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-bold text-white"><i class="fa-solid fa-boxes-packing text-blue-400 mr-2"></i>Підбір запчастин для клієнта</h3>
+<button type="button" onclick="closePartOfferModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+</div>
+<div class="space-y-4">
+<p class="text-xs text-gray-400">Заповніть варіанти деталей із цінами. Клієнт зможе у своєму кабінеті галочками обрати потрібні товари.</p>
+<div id="offer-items-container" class="space-y-2.5"></div>
+<button type="button" onclick="addOfferRow()" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-2 rounded-xl transition">+ Додати варіант запчастини</button>
+<div class="flex justify-end space-x-2 pt-2 border-t border-gray-700">
+<button type="button" onclick="closePartOfferModal()" class="px-4 py-2.5 bg-gray-700 text-gray-300 text-sm rounded-xl">Скасувати</button>
+<button type="button" onclick="sendPartOffer()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-xl shadow">Надіслати клієнту</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- МОДАЛКА ЧАТУ МЕНЕДЖЕРА З КЛІЄНТОМ -->
+<div id="chat-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl h-[85vh] flex flex-col">
+<div class="flex justify-between items-center mb-3">
+<div>
+<h3 id="chat-client-title" class="text-lg font-bold text-white">Чат з клієнтом</h3>
+<p id="chat-client-sub" class="text-xs text-blue-400"></p>
+</div>
+<button type="button" onclick="closeChatModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+</div>
+<div id="mgr-chat-messages" class="flex-grow overflow-y-auto space-y-3 p-3 bg-gray-900/60 rounded-xl border border-gray-700/60 mb-3"></div>
+<form onsubmit="sendManagerChatMessage(event)" class="flex gap-2 items-center">
+<label class="p-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl cursor-pointer text-sm" title="Додати фото">
+<i class="fa-solid fa-camera"></i>
+<input type="file" id="mgr-file-input" accept="image/*" onchange="handleManagerImageUpload(event)" class="hidden">
+</label>
+<input type="text" id="mgr-chat-input" placeholder="Ваше повідомлення клієнту..." class="flex-grow bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+<button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition"><i class="fa-solid fa-paper-plane"></i></button>
+</form>
+</div>
+</div>
+
+<div id="client-card-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-5">
+<div class="flex justify-between items-start">
+<div>
+<h3 id="cc-name" class="text-lg font-bold text-white"></h3>
+<a id="cc-phone" class="text-sm text-blue-400"></a>
+<p id="cc-disc" class="text-xs text-emerald-400 mt-1"></p>
+</div>
+<div class="flex gap-2">
+<button type="button" onclick="openManagerChat(openCardId)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-comments mr-1"></i>Чат</button>
+<button type="button" onclick="closeClientCard()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+</div>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-gray-200 mb-2"><i class="fa-solid fa-car-side text-blue-400 mr-2"></i>Автопарк</h4>
+<div id="cc-vehicles" class="space-y-2"></div>
+<form onsubmit="mgrAddVehicle(event)" class="flex flex-col sm:flex-row gap-2 mt-3">
+<input type="text" id="cc-model" required placeholder="Марка та модель" class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white">
+<input type="text" id="cc-plate" required placeholder="Номер / VIN" class="sm:w-36 bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white uppercase">
+<button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-4 py-2 rounded-xl"><i class="fa-solid fa-plus mr-1"></i>Додати авто</button>
+</form>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-gray-200 mb-2"><i class="fa-solid fa-wrench text-yellow-400 mr-2"></i>Поточні замовлення (В роботі)</h4>
+<div id="cc-current" class="space-y-2"></div>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-gray-200 mb-2"><i class="fa-solid fa-box-archive text-gray-400 mr-2"></i>Архів замовлень (Видані)</h4>
+<div id="cc-past" class="space-y-2"></div>
+</div>
+</div>
+</div>
+
+<div id="invite-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+<div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-plus text-blue-400 mr-2"></i>Запросити клієнта</h3><button type="button" onclick="closeInviteModal()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Посилання на бота / Mini App</label>
+<div class="flex gap-2"><input type="url" id="invite-link" placeholder="https://t.me/ВашБот/app" oninput="saveBotLink()" class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white"><button type="button" onclick="copyInvite('link')" class="px-3 bg-gray-700 text-gray-300 rounded-xl" title="Скопіювати посилання"><i class="fa-solid fa-copy"></i></button></div>
+<p class="text-[11px] text-gray-500 mt-1">Вставте один раз — збережеться. Беріть із BotFather (Mini App) або t.me/ВашБот.</p></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Текст запрошення</label><textarea id="invite-text" rows="3" oninput="saveInviteText()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white"></textarea></div>
+<div class="grid grid-cols-2 gap-2">
+<button type="button" onclick="shareInvite()" class="bg-blue-600 text-white text-sm font-medium py-3 rounded-xl"><i class="fa-brands fa-telegram mr-1"></i>Надіслати в Telegram</button>
+<button type="button" onclick="copyInvite('all')" class="bg-emerald-600 text-white text-sm font-medium py-3 rounded-xl"><i class="fa-solid fa-copy mr-1"></i>Копіювати для груп</button>
+</div></div></div>
+
+<div id="client-pick-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-start justify-center p-3 pt-16" style="z-index:70">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full shadow-2xl flex flex-col" style="max-height:80dvh">
+<div class="p-4 flex gap-2 items-center border-b border-gray-700"><input type="search" id="cp-search" oninput="renderClientPicker()" placeholder="Пошук: ім'я, телефон, авто, номер" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white"><button type="button" onclick="closeClientPicker()" class="text-gray-400 px-2"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<div id="cp-list" class="overflow-y-auto divide-y divide-gray-700"></div></div></div>
+
+<div id="desc-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-start justify-center p-3 pt-16" style="z-index:70">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full shadow-2xl p-4 space-y-3">
+<h3 class="font-bold text-white">Назва позиції</h3>
+<textarea id="desc-text" rows="4" oninput="descSuggest()" placeholder="Наприклад: Гальмівні колодки передні Bosch" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white"></textarea>
+<div id="desc-suggest" class="space-y-1"></div>
+<div class="flex justify-end gap-2"><button type="button" onclick="closeDescEditor()" class="px-4 py-2.5 rounded-xl bg-gray-700 text-gray-300 text-sm">Скасувати</button><button type="button" onclick="applyDesc()" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium">Готово</button></div>
+</div></div>
+
+<div id="receive-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-3" style="z-index:70">
+<form onsubmit="saveReceive(event)" class="bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full shadow-2xl p-5 space-y-3 max-h-[90dvh] overflow-y-auto">
+<h3 class="font-bold text-white"><i class="fa-solid fa-truck-ramp-box text-blue-400 mr-2"></i>Оприбуткування від постачальника</h3>
+<div><label class="block text-xs uppercase text-gray-400 mb-1">Найменування</label><input type="text" id="rc-name" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white"></div>
+<div><label class="block text-xs uppercase text-gray-400 mb-1">Постачальник</label><input type="text" id="rc-supplier" required list="rc-suppliers" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white"><datalist id="rc-suppliers"></datalist></div>
+<div class="grid grid-cols-2 gap-2"><div><label class="block text-xs uppercase text-gray-400 mb-1">Кат. №</label><input type="text" id="rc-cat" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white"></div><div><label class="block text-xs uppercase text-gray-400 mb-1">Кількість</label><input type="number" id="rc-qty" min="0" step="any" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white"></div></div>
+<div class="grid grid-cols-2 gap-2"><div><label class="block text-xs uppercase text-gray-400 mb-1">Закупівля, грн</label><input type="number" id="rc-cost" step="0.01" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white"></div><div><label class="block text-xs uppercase text-gray-400 mb-1">Ціна клієнту</label><input type="number" id="rc-price" step="0.01" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white"></div></div>
+<div class="flex justify-end gap-2 pt-1"><button type="button" onclick="closeReceive()" class="px-4 py-2.5 rounded-xl bg-gray-700 text-gray-300 text-sm">Скасувати</button><button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium">Оприбуткувати</button></div>
+</form></div>
+
+<div id="settings-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+<div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">Налаштування пароля менеджера</h3><button type="button" onclick="closeSettingsModal()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<form onsubmit="changeManagerPassword(event)" class="space-y-4">
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Поточний пароль</label><input type="password" id="set-current-pass" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm"></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Новий пароль</label><input type="password" id="set-new-pass" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm"></div>
+<p id="settings-error" class="text-xs text-red-400 hidden"></p><p id="settings-success" class="text-xs text-emerald-400 hidden"></p>
+<div class="flex justify-end space-x-2 pt-2"><button type="button" onclick="closeSettingsModal()" class="px-4 py-2 bg-gray-700 text-gray-300 text-sm rounded-xl">Скасувати</button><button type="submit" class="px-5 py-2 bg-blue-600 text-white text-sm rounded-xl">Зберегти</button></div>
+</form>
+</div>
+</div>
+
+<!-- МОДАЛКА НАРЯД-ЗАМОВЛЕННЯ (ІЗ РУЧНИМ КОНТРОЛЕМ ЗНИЖКИ ТА СТАТУСОМ ОПЛАТИ) -->
+<div id="order-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-4"><h3 id="order-modal-title" class="text-lg font-bold text-white">Наряд-замовлення</h3><button type="button" onclick="closeNewOrderModal()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<form id="order-form" onsubmit="saveOrder(event)" class="space-y-4">
+<input type="hidden" id="order-edit-id" value="">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<div class="sm:col-span-2"><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Клієнт</label><select id="order-client-id" required onchange="fillOrderCars()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white"></select></div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Пробіг</label><input type="number" id="order-mileage" placeholder="185000" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white"></div>
+</div>
+<div><label class="block text-xs uppercase font-medium text-gray-400 mb-1">Авто клієнта</label><select id="order-car" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white"></select></div>
+<div class="border-t border-gray-700 pt-4">
+<div class="flex justify-between items-center mb-3"><label class="text-sm font-semibold text-gray-300">Позиції</label><div class="flex gap-2"><button type="button" onclick="addOrderItemRow()" class="bg-gray-700 text-white text-xs px-3 py-1.5 rounded-lg">+ Позиція</button><button type="button" onclick="openWarehouseSelector()" class="bg-blue-600/20 text-blue-400 text-xs px-3 py-1.5 rounded-lg border border-blue-500/30">Зі складу</button></div></div>
+<div id="order-items-container" class="space-y-2.5"></div>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Статус виконання</label>
+<select id="order-status-select" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white">
+<option value="Нове">Нове</option>
+<option value="Підбір запчастин">Підбір запчастин</option>
+<option value="Очікує підтвердження">Очікує підтвердження</option>
+<option value="В роботі" selected>В роботі</option>
+<option value="Готово">Готово</option>
+<option value="Видано">Видано (в Архів)</option>
+</select>
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Статус оплати</label>
+<select id="order-paid" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white">
+<option value="0">⏳ Не оплачено</option>
+<option value="1">💳 Оплачено</option>
+</select>
+</div>
+<div>
+<label class="block text-xs uppercase font-medium text-gray-400 mb-1">Примітки</label>
+<input type="text" id="order-notes" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white">
+</div>
+</div>
+
+<!-- Блок керування знижкою клієнта -->
+<div class="bg-gray-900/70 p-4 rounded-xl border border-gray-700 space-y-2.5">
+<div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-gray-700/60">
+<label class="flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-gray-200 font-medium">
+<input type="checkbox" id="order-apply-discount" onchange="toggleOrderDiscount()" class="w-4 h-4 rounded">
+<span>Застосувати знижку клієнта</span>
+<span id="order-client-disc-hint" class="text-xs text-blue-400 font-normal">(0%)</span>
+</label>
+<div class="flex items-center gap-1.5">
+<input type="number" id="order-discount-pct" min="0" max="100" step="1" value="0" oninput="calcOrderTotal()" disabled class="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-center text-xs text-white font-bold disabled:opacity-50">
+<span class="text-xs text-gray-400">%</span>
+</div>
+</div>
+<div id="order-subtotal-row" class="hidden flex justify-between items-center text-xs text-gray-400">
+<span>Сума без знижки:</span>
+<span id="order-modal-subtotal">0.00 грн</span>
+</div>
+<div id="order-discount-row" class="hidden flex justify-between items-center text-xs text-amber-300">
+<span>Знижка:</span>
+<span id="order-modal-discount">-0.00 грн</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-gray-400 text-sm font-medium">До сплати:</span>
+<span id="order-modal-total" class="text-xl font-bold text-emerald-400">0.00 грн</span>
+</div>
+</div>
+
+<div class="flex justify-end space-x-3 pt-2"><button type="button" onclick="closeNewOrderModal()" class="px-4 py-2.5 bg-gray-700 text-gray-300 text-sm rounded-xl">Скасувати</button><button type="submit" class="px-5 py-2.5 bg-blue-600 text-white text-sm rounded-xl shadow">Зберегти</button></div>
+</form>
+</div>
+</div>
+
+<div id="ware-select-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+<div class="bg-gray-800 border border-gray-700 rounded-2xl max-w-lg w-full p-4 shadow-2xl max-h-[80vh] flex flex-col">
+<div class="flex justify-between items-center mb-3"><h3 class="text-lg font-bold text-white">Вибрати зі складу</h3><button type="button" onclick="closeWarehouseSelector()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<div class="overflow-y-auto flex-grow divide-y divide-gray-700" id="ware-select-list"></div>
+</div>
+</div>
+
+<div id="invoice-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 z-50">
+<div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto flex flex-col">
+<div class="flex justify-between items-center mb-4 no-print"><h3 class="text-lg font-bold text-white">Акт</h3><div class="flex flex-wrap gap-2 justify-end"><button type="button" onclick="invPrint()" class="bg-blue-600 text-white px-3 py-2 rounded-xl text-sm"><i class="fa-solid fa-print mr-1"></i>Друк</button><button type="button" onclick="invShare()" class="bg-gray-700 text-gray-200 px-3 py-2 rounded-xl text-sm"><i class="fa-solid fa-file-pdf mr-1"></i>PDF</button><button type="button" onclick="invTelegram()" class="bg-gray-700 text-gray-200 px-3 py-2 rounded-xl text-sm"><i class="fa-brands fa-telegram mr-1"></i>Telegram</button><button type="button" onclick="invViber()" class="bg-gray-700 text-gray-200 px-3 py-2 rounded-xl text-sm"><i class="fa-brands fa-viber mr-1"></i>Viber</button><button type="button" onclick="closeInvoiceModal()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button></div></div>
+<div id="printable-area" class="bg-white text-gray-900 p-6 rounded-xl shadow-lg flex-grow">
+<div class="flex justify-between border-b pb-4 mb-4"><div><h2 class="text-2xl font-extrabold" style="color:#b08d4a;letter-spacing:.08em">ZENPARTS</h2><p class="text-xs text-gray-600">м. Світловодськ</p></div><div class="text-right"><h3 id="inv-order-num" class="font-bold">Акт №</h3><p id="inv-date" class="text-xs text-gray-600"></p></div></div>
+<div class="mb-4 grid grid-cols-2 gap-4 text-xs bg-gray-50 p-3 rounded-lg border"><div><p class="font-bold text-gray-500">Клієнт:</p><p id="inv-client-name" class="font-semibold text-sm"></p><p id="inv-client-phone"></p></div><div><p class="font-bold text-gray-500">Авто:</p><p id="inv-car-model" class="font-semibold text-sm"></p><p id="inv-car-plate" class="text-blue-600 font-mono"></p></div></div>
+<table class="w-full text-left text-xs mb-4 border-collapse"><thead><tr class="border-b bg-gray-100"><th class="p-2">№</th><th class="p-2">Найменування</th><th class="p-2 text-center">К-сть</th><th class="p-2 text-right">Ціна</th><th class="p-2 text-right">Сума</th></tr></thead><tbody id="inv-items-body" class="divide-y"></tbody></table>
+<div class="flex justify-end">
+<div class="w-56 space-y-1 text-xs">
+<div id="inv-sub-row" class="hidden flex justify-between text-gray-600"><span>Сума без знижки:</span><span id="inv-subtotal"></span></div>
+<div id="inv-disc-row" class="hidden flex justify-between text-emerald-700 font-medium"><span id="inv-disc-label">Знижка:</span><span id="inv-disc-val"></span></div>
+<div class="flex justify-between border-t pt-1"><span>До сплати:</span><span id="inv-grand-total" class="font-bold text-sm"></span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="toast" class="border text-white text-sm px-4 py-3 rounded-2xl shadow-2xl"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+var tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+function cloudGet(key, callback) {
+    if (tg && tg.CloudStorage) {
+        tg.CloudStorage.getItem(key, function(err, val) {
+            if (err || val === null || val === undefined || val === '') {
+                try { callback(localStorage.getItem(key)); } catch(e) { callback(null); }
+            } else { callback(val); }
+        });
+    } else {
+        try { callback(localStorage.getItem(key)); } catch(e) { callback(null); }
+    }
+}
+
+function cloudSet(key, value, callback) {
+    try { localStorage.setItem(key, value); } catch(e) {}
+    if (tg && tg.CloudStorage) {
+        tg.CloudStorage.setItem(key, value, function(err, success) { if (callback) callback(!err && success); });
+    } else { if (callback) callback(true); }
+}
+
+function cloudSetBig(key, str) {
+    try { localStorage.setItem(key, str); } catch(e) {}
+    if (!(tg && tg.CloudStorage)) return;
+    var n = Math.ceil(str.length / 3500);
+    for (var i = 0; i < n; i++) tg.CloudStorage.setItem(key + '_' + i, str.substr(i * 3500, 3500), function() {});
+    tg.CloudStorage.setItem(key + '_n', String(n), function() {});
+}
+
+function cloudGetBig(key, cb) {
+    if (!(tg && tg.CloudStorage)) { cloudGet(key, cb); return; }
+    tg.CloudStorage.getItem(key + '_n', function(err, nv) {
+        var n = parseInt(nv, 10);
+        if (err || !n) { cloudGet(key, cb); return; }
+        var keys = [];
+        for (var i = 0; i < n; i++) keys.push(key + '_' + i);
+        tg.CloudStorage.getItems(keys, function(err2, vals) {
+            if (err2 || !vals) { cloudGet(key, cb); return; }
+            cb(keys.map(function(k) { return vals[k] || ''; }).join(''));
+        });
+    });
+}
+
+function cloudRemove(key) {
+    try { localStorage.removeItem(key); } catch(e) {}
+    if (tg && tg.CloudStorage) tg.CloudStorage.removeItem(key, function() {});
+}
+
+var defaultDb = {
+    clients: [
+        { id: 1, name: "Олександр Петренко", phone: "+380671234567", password: "1234", vehicles: [{car: "Volkswagen Passat B8", plate: "BA1234CB"}], car: "Volkswagen Passat B8", plate: "BA1234CB" },
+        { id: 2, name: "Марія Коваленко", phone: "+380509876543", password: "1234", vehicles: [{car: "Renault Megane III", plate: "BI5678AX"}], car: "Renault Megane III", plate: "BI5678AX" }
+    ],
+    warehouse: [
+        { id: 1, name: "Мастило моторне 5W-30 (5л)", supplier: "Омега", catNo: "5W30-5L", qty: 4, unit: "шт", cost: 1800, price: 2200 },
+        { id: 2, name: "Фільтр масляний VAG", supplier: "Еліт", catNo: "04E115561H", qty: 7, unit: "шт", cost: 250, price: 350 }
+    ],
+    orders: [
+        { id: 1001, date: "2026-10-18 14:30", clientId: 1, mileage: 184500, notes: "ТО", items: [{ desc: "Заміна мастила", type: "Робота", qty: 1, price: 600, cost: 0, wareId: null }, { desc: "Мастило 5W-30", type: "Запчастина", qty: 1, price: 2200, cost: 1800, wareId: 1 }], status: "Видано", paid: true, discountPct: 0 }
+    ],
+    messages: []
+};
+
+var db = defaultDb;
+var managerPassword = 'admin';
+var currentClient = null;
+
+var SYNC_URL = 'https://script.google.com/macros/s/AKfycbxKougWKxIqeh5aU-kDAznQMbB7Cxm16OaKI0T0JBFOH5aB7OLoNkaNwuIpnaPVBHjl/exec';
+var CLIENT_KEY = '2604';
+var SESSION_TTL = 24 * 60 * 60 * 1000;
+
+var mgrKey = '';
+var pollTimer = null;
+var outboxBusy = false;
+var activeTab = 'dashboard';
+var ordersSubTab = 'active';
+var openCardId = null;
+var activeChatPhone = null;
+var activeOfferOrderId = null;
+var lastNewCount = -1;
+var lastMsgCount = 0;
+var msgSeeded = false;
+var STATUSES = ['Нове', 'Підбір запчастин', 'Очікує підтвердження', 'В роботі', 'Готово', 'Видано'];
+
+function esc(t) {
+    return String(t === undefined || t === null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function normPhone(p) { return (p || '').replace(/[\s\-()]/g, ''); }
+function findClientByPhone(phone) {
+    for (var i = 0; i < db.clients.length; i++) if (db.clients[i].phone === phone) return db.clients[i];
+    return null;
+}
+function getVehicles(c) {
+    if (c.vehicles && c.vehicles.length) return c.vehicles;
+    if (c.car && c.car !== 'Не вказано') return [{car: c.car, plate: c.plate}];
+    return [];
+}
+
+// Підрахунок суми без знижки, розміру знижки та підсумкової суми
+function orderRawSum(o) {
+    var t = 0;
+    for (var i = 0; i < (o.items || []).length; i++) t += (o.items[i].price || 0) * (o.items[i].qty || 1);
+    return t;
+}
+function orderDiscountAmount(o) {
+    var raw = orderRawSum(o);
+    var pct = parseFloat(o.discountPct) || 0;
+    if (!pct || pct <= 0) return 0;
+    return +(raw * (pct / 100)).toFixed(2);
+}
+function orderSum(o) {
+    return Math.max(0, +(orderRawSum(o) - orderDiscountAmount(o)).toFixed(2));
+}
+
+function statusBadge(st) {
+    if (st === 'Нове') return 'bg-purple-500/10 text-purple-300';
+    if (st === 'Підбір запчастин') return 'bg-blue-500/10 text-blue-300';
+    if (st === 'Очікує підтвердження') return 'bg-amber-500/10 text-amber-300';
+    if (st === 'Готово') return 'bg-emerald-500/10 text-emerald-400';
+    if (st === 'Видано') return 'bg-gray-500/10 text-gray-400';
+    return 'bg-yellow-500/10 text-yellow-400';
+}
+function statusSelectHtml(o) {
+    return '<select onchange="updateOrderStatus(' + o.id + ', this.value)" class="text-xs bg-gray-900 border border-gray-600 rounded p-1 text-white">' +
+        STATUSES.map(function(s) { return '<option' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>';
+}
+function paidToggleHtml(o) {
+    var isPaid = !!o.paid;
+    var cls = isPaid
+        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+        : 'bg-amber-500/15 text-amber-300 border-amber-500/40';
+    return '<button type="button" onclick="event.stopPropagation();toggleOrderPaid(' + o.id + ')" class="text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition ' + cls + '" title="Натисніть, щоб змінити статус оплати">' +
+        (isPaid ? '<i class="fa-solid fa-check-circle mr-1"></i>Оплачено' : '<i class="fa-solid fa-clock mr-1"></i>Не оплачено') +
+        '</button>';
+}
+function toggleOrderPaid(id) {
+    var ord = db.orders.find(function(o) { return o.id === id; });
+    if (!ord) return;
+    ord.paid = !ord.paid;
+    ord.updatedAt = Date.now();
+    ensureOrderMeta(ord);
+    saveDb();
+    pushItems([{t: 'o', data: ord}]);
+    refreshManagerViews();
+    toast(ord.paid ? '💳 Замовлення позначено як Оплачено' : '⏳ Замовлення позначено як Не оплачено');
+}
+
+function saveSession(phone, pass) {
+    cloudSet('zenparts_session', JSON.stringify({phone: phone, pass: pass, ts: Date.now()}));
+    cloudSet('zenparts_last_phone', phone);
+}
+function clearSession() { cloudRemove('zenparts_session'); }
+
+function getOutbox() { try { return JSON.parse(localStorage.getItem('zenparts_outbox') || '[]'); } catch(e) { return []; } }
+function setOutbox(a) { try { localStorage.setItem('zenparts_outbox', JSON.stringify(a)); } catch(e) {} }
+
+function pushItems(items) {
+    if (!SYNC_URL) return;
+    setOutbox(getOutbox().concat(items));
+    flushOutbox();
+}
+
+function flushOutbox() {
+    if (!SYNC_URL || outboxBusy) return;
+    var ob = getOutbox();
+    if (!ob.length) return;
+    outboxBusy = true;
+    fetch(SYNC_URL, { method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({key: mgrKey || CLIENT_KEY, items: ob}) })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res && res.ok) setOutbox(getOutbox().slice(ob.length));
+            outboxBusy = false;
+        })
+        .catch(function() { outboxBusy = false; });
+}
+
+function relayGet(params, cb) {
+    if (!SYNC_URL) { cb(null); return; }
+    fetch(SYNC_URL + '?' + new URLSearchParams(params).toString())
+        .then(function(r) { return r.json(); })
+        .then(cb)
+        .catch(function() { cb(null); });
+}
+
+function touchClient(c, oldPass) {
+    c.updatedAt = Date.now();
+    pushItems([{t: 'c', data: c, oldPass: oldPass}]);
+}
+
+function ensureOrderMeta(o) {
+    var cl = null;
+    for (var i = 0; i < db.clients.length; i++) if (db.clients[i].id === o.clientId) { cl = db.clients[i]; break; }
+    if (cl) { o.clientPhone = o.clientPhone || cl.phone; o.clientName = o.clientName || cl.name; }
+}
+
+function mergeRemote(res) {
+    (res.clients || []).forEach(function(rc) {
+        var i = -1;
+        for (var k = 0; k < db.clients.length; k++) if (db.clients[k].phone === rc.phone) { i = k; break; }
+        if (rc.deleted) { if (i > -1) db.clients.splice(i, 1); return; }
+        if (i === -1) db.clients.push(rc);
+        else if ((rc.updatedAt || 0) > (db.clients[i].updatedAt || 0)) db.clients[i] = rc;
+    });
+    (res.orders || []).forEach(function(ro) {
+        var i = -1;
+        for (var k = 0; k < db.orders.length; k++) if (db.orders[k].id === ro.id) { i = k; break; }
+        if (ro.deleted) { if (i > -1) db.orders.splice(i, 1); return; }
+        if (i === -1) db.orders.push(ro);
+        else if ((ro.updatedAt || 0) > (db.orders[i].updatedAt || 0)) {
+            if (currentClient && msgSeeded) {
+                if (ro.status === 'Підбір запчастин' && !db.orders[i].offeredItems) toast('🔧 Менеджер підібрав запчастини — оберіть потрібні');
+                else if (ro.status !== db.orders[i].status) toast('📦 Замовлення: ' + ro.status);
+            }
+            db.orders[i] = ro;
+        }
+    });
+    if (res.messages) {
+        var map = {}, from = currentClient ? 'manager' : 'client';
+        (db.messages || []).forEach(function(m) { map[m.id] = m; });
+        res.messages.forEach(function(m) {
+            if (!map[m.id] && m.sender === from && msgSeeded) toast('💬 ' + (from === 'manager' ? 'Менеджер' : 'Клієнт') + ': ' + (m.imgId ? '📷 фото' : String(m.text).slice(0, 60)));
+            map[m.id] = m;
+        });
+        db.messages = Object.keys(map).map(function(k) { return map[k]; }).sort(function(a, b) { return a.id - b.id; });
+        msgSeeded = true;
+    }
+    if (currentClient) { var f = findClientByPhone(currentClient.phone); if (f) currentClient = f; }
+    saveDb();
+}
+
+var lastVer = '';
+function smartPull(params, cb) {
+    relayGet({mode: 'v'}, function(v) {
+        if (v && v.v && v.v === lastVer) return;
+        relayGet(params, function(res) { if (res && !res.error) { if (v && v.v) lastVer = v.v; cb(res); } });
+    });
+}
+function toast(msg) {
+    var t = document.getElementById('toast');
+    t.innerText = msg; t.classList.add('show');
+    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    clearTimeout(t._h); t._h = setTimeout(function() { t.classList.remove('show'); }, 4500);
+}
+function compressImage(file, cb) {
+    var r = new FileReader();
+    r.onload = function() {
+        var img = new Image();
+        img.onload = function() {
+            var k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+            c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            cb(c.toDataURL('image/jpeg', 0.72));
+        };
+        img.onerror = function() { toast('Не вдалося прочитати фото'); };
+        img.src = r.result;
+    };
+    r.readAsDataURL(file);
+}
+function msgImg(m) { return m.imgId ? 'https://drive.google.com/thumbnail?id=' + m.imgId + '&sz=w1000' : (m.image || ''); }
+var DEFAULT_INVITE = 'Вітаємо в ZenParts! 🚗 Запчастини та сервіс для легкових і вантажних авто. Підбір деталей, чат з менеджером і статус замовлень — у нашому боті:';
+function getBotLink() { return localStorage.getItem('zenparts_bot_link') || ''; }
+function getInviteText() { return localStorage.getItem('zenparts_invite_text') || DEFAULT_INVITE; }
+function openInviteModal() {
+    document.getElementById('invite-link').value = getBotLink();
+    document.getElementById('invite-text').value = getInviteText();
+    var m = document.getElementById('invite-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+}
+function closeInviteModal() { var m = document.getElementById('invite-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function saveBotLink() { cloudSet('zenparts_bot_link', document.getElementById('invite-link').value.trim()); }
+function saveInviteText() { cloudSet('zenparts_invite_text', document.getElementById('invite-text').value); }
+function shareInvite() {
+    var link = getBotLink();
+    if (!link) { toast('Спочатку вставте посилання на бота'); return; }
+    var url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(getInviteText());
+    if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
+}
+function copyInvite(what) {
+    var link = getBotLink();
+    if (!link) { toast('Спочатку вставте посилання на бота'); return; }
+    var txt = what === 'link' ? link : getInviteText() + ' ' + link;
+    var done = function() { toast('Скопійовано ✓'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function() { prompt('Скопіюйте:', txt); });
+    else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch(e) { prompt('Скопіюйте:', txt); } ta.remove(); }
+}
+function stopSync() { lastVer = ''; if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+function startClientSync() {
+    stopSync();
+    if (!SYNC_URL) return;
+    pollTimer = setInterval(function() {
+        if (!currentClient) return;
+        flushOutbox();
+        smartPull({mode: 'c', key: CLIENT_KEY, phone: currentClient.phone, pass: currentClient.password}, function(res) {
+            mergeRemote(res);
+            updateClientHeader();
+            if (!document.getElementById('c-tab-orders').classList.contains('hidden')) renderClientOrders();
+            if (!document.getElementById('c-tab-chat').classList.contains('hidden')) renderClientChat();
+            updateClientChatBadge();
+        });
+    }, 4000);
+}
+
+function startManagerSync() {
+    stopSync();
+    if (!SYNC_URL) return;
+    pullManager();
+    pollTimer = setInterval(function() { flushOutbox(); pullManager(); }, 4000);
+}
+
+function pullManager() {
+    smartPull({mode: 'm', key: mgrKey}, function(res) {
+        mergeRemote(res);
+        refreshManagerViews();
+    });
+}
+
+function refreshManagerViews() {
+    updateNewBadge();
+    if (activeTab === 'dashboard') updateDashboard();
+    if (activeTab === 'new') renderNewOrders();
+    if (activeTab === 'warehouse') renderWarehouse();
+    if (activeTab === 'clients') renderClients();
+    if (activeTab === 'orders') renderOrders();
+    if (openCardId !== null) renderClientCard();
+    if (activeChatPhone) renderManagerChat();
+}
+
+function updateNewBadge() {
+    var n = 0;
+    for (var i = 0; i < db.orders.length; i++) if (db.orders[i].status === 'Нове' || db.orders[i].status === 'Очікує підтвердження') n++;
+    var b = document.getElementById('new-badge');
+    b.innerText = n;
+    if (n > 0) { b.classList.remove('hidden'); b.classList.add('flex'); } else { b.classList.add('hidden'); b.classList.remove('flex'); }
+    if (lastNewCount >= 0 && n > lastNewCount && tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    lastNewCount = n;
+}
+
+function updateClientChatBadge() {
+    if (!currentClient) return;
+    var badge = document.getElementById('client-chat-badge');
+    var msgs = (db.messages || []).filter(function(m) { return m.phone === currentClient.phone; });
+    var last = msgs[msgs.length - 1];
+    if (last && last.sender === 'manager' && document.getElementById('c-tab-chat').classList.contains('hidden')) {
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+    } else {
+        badge.classList.add('hidden');
+        badge.classList.remove('flex');
+    }
+}
+
+function initApp() {
+    ['bot_link','invite_text'].forEach(function(k) { cloudGet('zenparts_' + k, function(v) { if (v) try { localStorage.setItem('zenparts_' + k, v); } catch(e) {} }); });
+    if (tg) { try { tg.setHeaderColor('#ffffff'); tg.setBackgroundColor('#f7f6f6'); } catch(e) {} }
+    cloudGet('zenparts_last_phone', function(v) {
+        var inp = document.getElementById('client-login-phone');
+        if (v && !inp.value) inp.value = v;
+    });
+    cloudGet('zenparts_manager_pass', function(val) { if (val) managerPassword = val; });
+    cloudGetBig('zenparts_db', function(val) {
+        if (val) {
+            try {
+                var parsed = JSON.parse(val);
+                if (parsed && parsed.clients) db = parsed;
+                if (!db.warehouse) db.warehouse = [];
+                if (!db.orders) db.orders = [];
+                if (!db.messages) db.messages = [];
+                lastMsgCount = db.messages.length;
+            } catch(e) {}
+        }
+        checkAutoLogin();
+    });
+}
+
+function enterClientCabinet(c) {
+    currentClient = c;
+    var tu = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    if (tu && c.tgId !== tu.id) { c.tgId = tu.id; touchClient(c); }
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('client-container').classList.remove('hidden');
+    initClientDashboard();
+    startClientSync();
+}
+
+function checkAutoLogin() {
+    cloudGet('zenparts_session', function(raw) {
+        var sess = null;
+        try { sess = JSON.parse(raw); } catch(e) {}
+        if (!sess || !sess.phone) return;
+        if (Date.now() - sess.ts > SESSION_TTL) {
+            clearSession();
+            document.getElementById('client-login-phone').value = sess.phone;
+            return;
+        }
+        var c = findClientByPhone(sess.phone);
+        if (c && c.password === sess.pass) { enterClientCabinet(c); return; }
+        relayGet({mode: 'c', key: CLIENT_KEY, phone: sess.phone, pass: sess.pass}, function(res) {
+            if (!res || res.error) return;
+            mergeRemote(res);
+            var c2 = findClientByPhone(sess.phone);
+            if (c2) enterClientCabinet(c2);
+        });
+    });
+}
+
+function switchAuthTab(role) {
+    if (role === 'client') {
+        document.getElementById('auth-tab-client').className = "py-2.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow";
+        document.getElementById('auth-tab-manager').className = "py-2.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white";
+        document.getElementById('form-auth-client').classList.remove('hidden');
+        document.getElementById('form-auth-manager').classList.add('hidden');
+    } else {
+        document.getElementById('auth-tab-manager').className = "py-2.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow";
+        document.getElementById('auth-tab-client').className = "py-2.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white";
+        document.getElementById('form-auth-manager').classList.remove('hidden');
+        document.getElementById('form-auth-client').classList.add('hidden');
+    }
+}
+
+function openRegisterModal() {
+    document.getElementById('reg-name').value = '';
+    document.getElementById('reg-phone').value = '';
+    document.getElementById('reg-pass').value = '';
+    document.getElementById('reg-car').value = '';
+    document.getElementById('reg-plate').value = '';
+    document.getElementById('reg-error').classList.add('hidden');
+    document.getElementById('register-modal').classList.remove('hidden');
+    document.getElementById('register-modal').classList.add('flex');
+}
+
+function closeRegisterModal() {
+    document.getElementById('register-modal').classList.add('hidden');
+    document.getElementById('register-modal').classList.remove('flex');
+}
+
+function handleClientRegister(e) {
+    e.preventDefault();
+    var name = document.getElementById('reg-name').value.trim();
+    var phone = normPhone(document.getElementById('reg-phone').value);
+    var pass = document.getElementById('reg-pass').value;
+    var car = document.getElementById('reg-car').value.trim() || "Не вказано";
+    var plate = document.getElementById('reg-plate').value.trim().toUpperCase() || "------";
+    var errEl = document.getElementById('reg-error');
+    var fail = function(t) { errEl.innerText = t; errEl.classList.remove('hidden'); };
+    errEl.classList.add('hidden');
+
+    relayGet({mode: 'r', key: CLIENT_KEY, phone: phone}, function(res) {
+        var local = findClientByPhone(phone);
+        if (res && res.exists) {
+            if (!res.claimable) { fail("Цей номер уже зареєстрований — поверніться й увійдіть з вашим паролем."); return; }
+            mergeRemote({clients: [res.client], orders: res.orders || []});
+            local = findClientByPhone(phone);
+            var oldPass = local.password || '';
+            local.password = pass;
+            if (!getVehicles(local).length && car !== "Не вказано") { local.vehicles = [{car: car, plate: plate}]; local.car = car; local.plate = plate; }
+            touchClient(local, oldPass);
+            saveDb();
+            saveSession(phone, pass);
+            closeRegisterModal();
+            enterClientCabinet(local);
+            return;
+        }
+        if (local) { fail("Клієнт з таким номером уже існує!"); return; }
+        var newClient = {
+            id: Date.now(), name: name, phone: phone, password: pass, car: car, plate: plate,
+            vehicles: car !== "Не вказано" ? [{car: car, plate: plate}] : []
+        };
+        db.clients.push(newClient);
+        touchClient(newClient);
+        saveDb();
+        saveSession(phone, pass);
+        closeRegisterModal();
+        enterClientCabinet(newClient);
+    });
+}
+
+function handleManagerLogin(e) {
+    e.preventDefault();
+    var pass = document.getElementById('manager-auth-pass').value;
+    if (pass === managerPassword) {
+        document.getElementById('auth-screen').classList.add('hidden');
+        mgrKey = pass;
+        document.getElementById('manager-container').classList.remove('hidden');
+        updateDashboard();
+        updateNewBadge();
+        startManagerSync();
+    } else {
+        document.getElementById('manager-auth-error').classList.remove('hidden');
+    }
+}
+
+function handleClientLogin(e) {
+    e.preventDefault();
+    var phoneInput = normPhone(document.getElementById('client-login-phone').value);
+    var passInput = document.getElementById('client-login-pass').value;
+    var errEl = document.getElementById('client-auth-error');
+    errEl.classList.add('hidden');
+
+    relayGet({mode: 'c', key: CLIENT_KEY, phone: phoneInput, pass: passInput}, function(res) {
+        if (res && res.error === 'wrongpass') {
+            errEl.innerText = "Невірний пароль! Якщо ви ще не заходили в застосунок — натисніть «Створити акаунт».";
+            errEl.classList.remove('hidden');
+            return;
+        }
+        var serverKnows = !!(res && !res.error && res.clients && res.clients.length);
+        if (res && !res.error) mergeRemote(res);
+
+        var foundClient = findClientByPhone(phoneInput);
+        if (!foundClient) {
+            foundClient = {
+                id: Date.now(),
+                name: "Клієнт (" + phoneInput + ")",
+                phone: phoneInput,
+                password: passInput,
+                vehicles: [],
+                car: "Не вказано",
+                plate: "------"
+            };
+            db.clients.push(foundClient);
+            touchClient(foundClient);
+            saveDb();
+        } else if (!foundClient.password) {
+            foundClient.password = passInput;
+            touchClient(foundClient);
+            saveDb();
+        } else if (foundClient.password !== passInput) {
+            errEl.innerText = "Невірний пароль! Якщо ви ще не заходили в застосунок — натисніть «Створити акаунт».";
+            errEl.classList.remove('hidden');
+            return;
+        } else if (!serverKnows) {
+            touchClient(foundClient);
+        }
+
+        saveSession(phoneInput, passInput);
+        enterClientCabinet(foundClient);
+    });
+}
+
+function logoutClient() {
+    stopSync();
+    currentClient = null;
+    clearSession();
+    document.getElementById('client-login-pass').value = '';
+    document.getElementById('client-container').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('hidden');
+}
+
+function logoutManager() {
+    stopSync();
+    mgrKey = '';
+    openCardId = null;
+    document.getElementById('manager-container').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('hidden');
+}
+
+// Загальна сума покупок клієнта по всіх Виданих замовленнях
+function getClientTotalSpent(clientId) {
+    var cl = db.clients.find(function(c) { return c.id === clientId; });
+    var phone = cl ? cl.phone : null;
+    var spent = 0;
+    for (var i = 0; i < db.orders.length; i++) {
+        var ord = db.orders[i];
+        var sameClient = (ord.clientId === clientId) || (phone && ord.clientPhone === phone);
+        if (sameClient && ord.status === 'Видано') {
+            spent += orderSum(ord);
+        }
+    }
+    return spent;
+}
+
+// Накопичувальна знижка від загальної суми покупок (1% за кожні 5000 грн, максимум 10%)
+function getClientDiscount(clientId) {
+    var spent = getClientTotalSpent(clientId);
+    var disc = Math.floor(spent / 5000);
+    return disc > 10 ? 10 : disc;
+}
+
+function updateClientHeader() {
+    if (!currentClient) return;
+    var spent = getClientTotalSpent(currentClient.id);
+    var disc = getClientDiscount(currentClient.id);
+    document.getElementById('client-header-name').innerText = currentClient.name;
+    document.getElementById('client-header-bonus').innerText = "Ваша знижка: " + disc + "% (покупок на " + spent.toFixed(0) + " грн)";
+}
+
+function initClientDashboard() {
+    if (!currentClient) return;
+    updateClientHeader();
+    switchClientTab('orders');
+}
+
+function switchClientTab(tab) {
+    ['orders', 'neworder', 'vehicles', 'chat'].forEach(function(t) {
+        document.getElementById('c-tab-' + t).classList.add('hidden');
+        document.getElementById('c-btn-' + t).className = "py-2.5 rounded-xl bg-gray-700 text-gray-300 text-[11px] sm:text-xs font-semibold transition flex items-center justify-center space-x-1";
+    });
+    document.getElementById('c-tab-' + tab).classList.remove('hidden');
+    document.getElementById('c-btn-' + tab).className = "py-2.5 rounded-xl bg-blue-600 text-white text-[11px] sm:text-xs font-semibold shadow transition flex items-center justify-center space-x-1";
+
+    if (tab === 'orders') renderClientOrders();
+    if (tab === 'vehicles') renderClientVehicles();
+    if (tab === 'neworder') populateClientCarSelect();
+    if (tab === 'chat') {
+        renderClientChat();
+        updateClientChatBadge();
+    }
+}
+
+function renderClientOrders() {
+    var container = document.getElementById('client-orders-list');
+    container.innerHTML = '';
+    var myOrders = [];
+    for (var i = 0; i < db.orders.length; i++) {
+        if (db.orders[i].clientId === currentClient.id || db.orders[i].clientPhone === currentClient.phone) {
+            myOrders.push(db.orders[i]);
+        }
+    }
+
+    if (myOrders.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">У вас немає активних чи минулих замовлень</p>';
+        return;
+    }
+
+    var activeOrders = myOrders.filter(function(o) { return o.status !== 'Видано'; }).reverse();
+    var archiveOrders = myOrders.filter(function(o) { return o.status === 'Видано'; }).reverse();
+
+    function buildClientOrderCard(ord) {
+        var badge = statusBadge(ord.status);
+        var paidBadge = ord.paid
+            ? '<span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-medium">💳 Оплачено</span>'
+            : '<span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-medium">⏳ Не оплачено</span>';
+
+        var h = '<div class="bg-gray-900/60 p-4 rounded-xl border border-gray-700/60 space-y-3">' +
+            '<div class="flex flex-wrap justify-between items-center gap-2"><span class="font-bold text-white">Заявка #' + String(ord.id).slice(-6) + '</span><div class="flex items-center gap-1.5">' + paidBadge + '<span class="text-xs px-2.5 py-1 rounded-full font-medium ' + badge + '">' + ord.status + '</span></div></div>' +
+            (ord.car ? '<div class="text-xs text-gray-300"><i class="fa-solid fa-car text-blue-400 mr-1"></i>' + esc(ord.car) + '</div>' : '') +
+            '<div class="text-xs text-gray-400">Дата: ' + esc(ord.date) + '</div>';
+
+        if (ord.status === 'Підбір запчастин' && ord.offeredItems && ord.offeredItems.length) {
+            h += '<div class="bg-gray-800 p-3 rounded-xl border border-blue-500/40 space-y-2">' +
+                '<p class="text-xs font-bold text-blue-300"><i class="fa-solid fa-boxes-packing mr-1"></i>Менеджер підібрав запчастини. Оберіть галочками потрібні:</p>' +
+                '<form onsubmit="submitClientPartSelection(event, ' + ord.id + ')" class="space-y-2">';
+            for (var k = 0; k < ord.offeredItems.length; k++) {
+                var it = ord.offeredItems[k], ln = it.price * (it.qty || 1);
+                h += '<label class="flex items-center justify-between gap-2 bg-gray-900 p-2.5 rounded-lg border border-gray-700 text-xs text-white cursor-pointer hover:border-blue-500">' +
+                    '<div class="flex items-center gap-2 min-w-0"><input type="checkbox" name="part_select_' + ord.id + '" value="' + k + '" data-line="' + ln + '" checked onchange="updOfferTotal(' + ord.id + ')" class="w-4 h-4 shrink-0"><div class="min-w-0"><div class="truncate">' + esc(it.desc) + '</div><div class="text-[11px] text-gray-400">' + (it.qty || 1) + ' шт × ' + it.price.toFixed(2) + ' грн</div></div></div>' +
+                    '<span class="font-bold text-emerald-400 whitespace-nowrap">' + ln.toFixed(2) + ' грн</span></label>';
+            }
+            h += '<div class="flex justify-between items-center px-1 pt-1 text-sm font-bold"><span class="text-gray-300">Разом до сплати:</span><span id="offer-total-' + ord.id + '" class="text-emerald-400"></span></div>' +
+                '<button type="submit" class="w-full bg-emerald-600 text-white text-xs font-medium py-2.5 rounded-xl shadow mt-2">Замовити обране</button></form></div>';
+            setTimeout(function(id) { return function() { updOfferTotal(id); }; }(ord.id), 0);
+        } else if (ord.status === 'Очікує підтвердження') {
+            h += '<div class="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300"><i class="fa-solid fa-hourglass-half mr-1"></i>Ваш вибір відправлено менеджеру. Очікується остаточне підтвердження замовлення.</div>';
+            h += itemsSummary(ord);
+        } else if (ord.items && ord.items.length) {
+            h += itemsSummary(ord);
+        }
+        h += '</div>';
+        return h;
+    }
+
+    var html = '';
+    if (activeOrders.length > 0) {
+        html += '<div class="space-y-3"><h4 class="text-xs font-bold uppercase tracking-wider text-blue-400">Активні замовлення (' + activeOrders.length + ')</h4>';
+        activeOrders.forEach(function(o) { html += buildClientOrderCard(o); });
+        html += '</div>';
+    } else {
+        html += '<p class="text-gray-500 text-xs text-center py-2">Активних замовлень наразі немає</p>';
+    }
+
+    if (archiveOrders.length > 0) {
+        html += '<details class="group pt-3 border-t border-gray-700"><summary class="cursor-pointer list-none flex items-center justify-between text-xs font-bold uppercase tracking-wider text-gray-400 py-2"><span><i class="fa-solid fa-box-archive mr-1.5"></i>Архів виконаних замовлень (' + archiveOrders.length + ')</span><i class="fa-solid fa-chevron-down transition group-open:rotate-180"></i></summary><div class="space-y-3 mt-2">';
+        archiveOrders.forEach(function(o) { html += buildClientOrderCard(o); });
+        html += '</div></details>';
+    }
+
+    container.innerHTML = html;
+}
+
+function updOfferTotal(id) {
+    var t = 0;
+    document.querySelectorAll('input[name="part_select_' + id + '"]:checked').forEach(function(cb) { t += parseFloat(cb.dataset.line) || 0; });
+    var el = document.getElementById('offer-total-' + id);
+    if (el) el.innerText = t.toFixed(2) + ' грн';
+}
+
+function itemsSummary(o) {
+    if (!o.items || !o.items.length) return '';
+    var raw = orderRawSum(o);
+    var disc = orderDiscountAmount(o);
+    var finalSum = orderSum(o);
+    return '<div class="text-xs text-gray-300 bg-gray-900/40 p-2.5 rounded-lg space-y-1">' +
+        o.items.map(function(i) {
+            return '<div class="flex justify-between gap-2"><span>' + esc(i.desc) + ' · ' + (i.qty || 1) + ' шт × ' + i.price.toFixed(2) + '</span><span class="font-bold text-white whitespace-nowrap">' + (i.price * (i.qty || 1)).toFixed(2) + ' грн</span></div>';
+        }).join('') +
+        (disc > 0 ? '<div class="border-t border-gray-700/60 pt-1 flex justify-between text-amber-300"><span>Сума без знижки:</span><span>' + raw.toFixed(2) + ' грн</span></div>' +
+                    '<div class="flex justify-between text-emerald-400"><span>Знижка клієнта (-' + o.discountPct + '%):</span><span>-' + disc.toFixed(2) + ' грн</span></div>' : '') +
+        '<div class="border-t border-gray-700 pt-1 flex justify-between items-center font-bold text-emerald-400"><span>До сплати:</span><span>' + finalSum.toFixed(2) + ' грн</span></div>' +
+        '</div>';
+}
+
+function mgrItemsHtml(o) {
+    if (!o.items || !o.items.length || o.status === 'Нове') return '';
+    var rows = (o.status === 'Підбір запчастин' && o.offeredItems) ? o.offeredItems : o.items;
+    var raw = rows.reduce(function(t, i) { return t + (i.price || 0) * (i.qty || 1); }, 0);
+    var disc = (o.status !== 'Підбір запчастин') ? orderDiscountAmount(o) : 0;
+    var finalSum = Math.max(0, raw - disc);
+    return '<div class="text-xs bg-gray-900/60 p-2 rounded-lg space-y-1 border border-gray-700/60">' + rows.map(function(i) {
+        return '<div class="flex justify-between gap-2"><span class="text-gray-200">' + esc(i.desc) + (i.catNo ? ' <b class="text-amber-300">[' + esc(i.catNo) + ']</b>' : '') + ' · ' + (i.qty || 1) + ' шт × ' + (i.price || 0).toFixed(2) + '</span><span class="font-bold text-white whitespace-nowrap">' + ((i.price || 0) * (i.qty || 1)).toFixed(2) + '</span></div>';
+    }).join('') +
+    (disc > 0 ? '<div class="border-t border-gray-700/60 pt-1 flex justify-between text-amber-300"><span>Знижка (-' + o.discountPct + '%):</span><span>-' + disc.toFixed(2) + ' грн</span></div>' : '') +
+    '<div class="border-t border-gray-700 pt-1 flex justify-between font-bold text-emerald-400"><span>Разом:</span><span>' + finalSum.toFixed(2) + ' грн</span></div></div>';
+}
+
+function submitClientPartSelection(e, orderId) {
+    e.preventDefault();
+    var ord = db.orders.find(function(o) { return o.id === orderId; });
+    if (!ord || !ord.offeredItems) return;
+
+    var checkboxes = document.querySelectorAll('input[name="part_select_' + orderId + '"]:checked');
+    if (checkboxes.length === 0) {
+        alert("Будь ласка, оберіть хоча б одну запчастину!");
+        return;
+    }
+
+    var selIdx = [], selectedItems = [];
+    checkboxes.forEach(function(cb) { var ix = parseInt(cb.value); selIdx.push(ix); selectedItems.push(ord.offeredItems[ix]); });
+    ord.items = selectedItems;
+    ord.status = 'Очікує підтвердження';
+    ord.updatedAt = Date.now();
+    ensureOrderMeta(ord);
+    saveDb();
+    pushItems([{t: 'o', data: {id: ord.id, clientPhone: ord.clientPhone, updatedAt: ord.updatedAt}, selectedIdx: selIdx}]);
+    alert("Дякуємо! Ваше замовлення відправлено менеджеру на підтвердження.");
+    renderClientOrders();
+}
+
+function renderClientVehicles() {
+    var container = document.getElementById('client-vehicles-list');
+    container.innerHTML = '';
+    var vehs = currentClient.vehicles || [];
+    if (vehs.length === 0 && currentClient.car) {
+        vehs = [{car: currentClient.car, plate: currentClient.plate}];
+    }
+
+    if (vehs.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm col-span-2 text-center py-4">Не додано жодного автомобіля</p>';
+        return;
+    }
+
+    var html = '';
+    for (var i = 0; i < vehs.length; i++) {
+        html += '<div class="bg-gray-900/60 p-3 rounded-xl border border-gray-700/60 flex justify-between items-center">' +
+            '<div><div class="font-bold text-white text-sm">' + esc(vehs[i].car) + '</div><div class="text-xs text-blue-400 font-mono">' + esc(vehs[i].plate) + '</div></div>' +
+            '<button onclick="deleteClientVehicle(' + i + ')" class="text-red-400 hover:text-red-300 p-2"><i class="fa-solid fa-trash"></i></button>' +
+            '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function openAddVehicleModal() {
+    document.getElementById('v-model').value = '';
+    document.getElementById('v-plate').value = '';
+    document.getElementById('vehicle-modal').classList.remove('hidden');
+    document.getElementById('vehicle-modal').classList.add('flex');
+}
+
+function closeAddVehicleModal() {
+    document.getElementById('vehicle-modal').classList.add('hidden');
+    document.getElementById('vehicle-modal').classList.remove('flex');
+}
+
+function saveClientVehicle(e) {
+    e.preventDefault();
+    var car = document.getElementById('v-model').value.trim();
+    var plate = document.getElementById('v-plate').value.trim().toUpperCase();
+    if (!currentClient.vehicles) currentClient.vehicles = [];
+    currentClient.vehicles.push({car: car, plate: plate});
+    currentClient.car = car;
+    currentClient.plate = plate;
+
+    touchClient(currentClient);
+    saveDb();
+    closeAddVehicleModal();
+    renderClientVehicles();
+}
+
+function deleteClientVehicle(index) {
+    if (confirm("Видалити автомобіль?")) {
+        currentClient.vehicles.splice(index, 1);
+        if (currentClient.vehicles.length > 0) {
+            currentClient.car = currentClient.vehicles[0].car;
+            currentClient.plate = currentClient.vehicles[0].plate;
+        } else {
+            currentClient.car = "Не вказано";
+            currentClient.plate = "------";
+        }
+        touchClient(currentClient);
+        saveDb();
+        renderClientVehicles();
+    }
+}
+
+function populateClientCarSelect() {
+    var sel = document.getElementById('client-order-car');
+    var vehs = currentClient.vehicles || [];
+    var html = '<option value="">-- Виберіть авто --</option>';
+    for (var i = 0; i < vehs.length; i++) {
+        html += '<option value="' + esc(vehs[i].car + ' (' + vehs[i].plate + ')') + '">' + esc(vehs[i].car + ' [' + vehs[i].plate + ']') + '</option>';
+    }
+    sel.innerHTML = html;
+}
+
+function submitClientOrder(e) {
+    e.preventDefault();
+    var carInfo = document.getElementById('client-order-car').value;
+    var desc = document.getElementById('client-order-desc').value.trim();
+
+    var now = new Date();
+    var dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+    var order = {
+        id: Date.now(),
+        date: dateStr,
+        clientId: currentClient.id,
+        clientPhone: currentClient.phone,
+        clientName: currentClient.name,
+        car: carInfo,
+        mileage: 0,
+        notes: "Заявка на запчастини: " + desc,
+        items: [{ desc: "Запит: " + desc, type: "Запчастина", qty: 1, price: 0, cost: 0, wareId: null }],
+        offeredItems: [],
+        status: "Нове",
+        paid: false,
+        discountPct: 0,
+        updatedAt: Date.now()
+    };
+    db.orders.push(order);
+    saveDb();
+    pushItems([{t: 'o', data: order, notify: true}]);
+    alert("Заявку на запчастини успішно надіслано менеджеру!");
+    document.getElementById('client-order-desc').value = '';
+    switchClientTab('orders');
+}
+
+// ----- ЧАТ МЕНЕДЖЕР ↔ КЛІЄНТ -----
+function renderClientChat() {
+    var box = document.getElementById('client-chat-messages');
+    var msgs = (db.messages || []).filter(function(m) { return m.phone === currentClient.phone; });
+    if (!msgs.length) {
+        box.innerHTML = '<p class="text-gray-500 text-xs text-center py-4">Напишіть повідомлення майстру або надішліть фото...</p>';
+        return;
+    }
+    box.innerHTML = msgs.map(function(m) {
+        var isMe = m.sender === 'client';
+        var content = msgImg(m) ? '<img src="' + msgImg(m) + '" class="rounded-lg mt-1 cursor-pointer" onclick="window.open(this.src)">' : '<div>' + esc(m.text) + '</div>';
+        return '<div class="flex ' + (isMe ? 'justify-end' : 'justify-start') + '">' +
+            '<div class="max-w-[80%] p-3 rounded-2xl text-xs ' + (isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-bl-none') + '">' +
+            '<div class="font-bold text-[10px] opacity-75 mb-0.5">' + (isMe ? 'Ви' : 'Менеджер ZenParts') + ' · ' + (m.time || '') + '</div>' +
+            content +
+            '</div></div>';
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+}
+
+function sendClientChatMessage(e) {
+    e.preventDefault();
+    var inp = document.getElementById('client-chat-input');
+    var txt = inp.value.trim();
+    if (!txt) return;
+    saveAndPushChatMessage(currentClient.phone, 'client', txt, null);
+    inp.value = '';
+    renderClientChat();
+}
+
+function handleClientImageUpload(e) {
+    var file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    compressImage(file, function(data) { saveAndPushChatMessage(currentClient.phone, 'client', '📷 Фото', data); renderClientChat(); });
+}
+
+function openManagerChat(clientId) {
+    var cl = db.clients.find(function(c) { return c.id === clientId; });
+    if (!cl) return;
+    activeChatPhone = cl.phone;
+    document.getElementById('chat-client-title').innerText = 'Чат: ' + cl.name;
+    document.getElementById('chat-client-sub').innerText = cl.phone + ' | ' + (cl.car || '');
+    renderManagerChat();
+    document.getElementById('chat-modal').classList.remove('hidden');
+    document.getElementById('chat-modal').classList.add('flex');
+}
+
+function closeChatModal() {
+    activeChatPhone = null;
+    document.getElementById('chat-modal').classList.add('hidden');
+    document.getElementById('chat-modal').classList.remove('flex');
+}
+
+function renderManagerChat() {
+    if (!activeChatPhone) return;
+    var box = document.getElementById('mgr-chat-messages');
+    var msgs = (db.messages || []).filter(function(m) { return m.phone === activeChatPhone; });
+    if (!msgs.length) {
+        box.innerHTML = '<p class="text-gray-500 text-xs text-center py-4">Повідомлень немає. Напишіть клієнту першим або надішліть фото.</p>';
+        return;
+    }
+    box.innerHTML = msgs.map(function(m) {
+        var isMe = m.sender === 'manager';
+        var content = msgImg(m) ? '<img src="' + msgImg(m) + '" class="rounded-lg mt-1 cursor-pointer" onclick="window.open(this.src)">' : '<div>' + esc(m.text) + '</div>';
+        return '<div class="flex ' + (isMe ? 'justify-end' : 'justify-start') + '">' +
+            '<div class="max-w-[80%] p-3 rounded-2xl text-xs ' + (isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-bl-none') + '">' +
+            '<div class="font-bold text-[10px] opacity-75 mb-0.5">' + (isMe ? 'Менеджер' : 'Клієнт') + ' · ' + (m.time || '') + '</div>' +
+            content +
+            '</div></div>';
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+}
+
+function sendManagerChatMessage(e) {
+    e.preventDefault();
+    var inp = document.getElementById('mgr-chat-input');
+    var txt = inp.value.trim();
+    if (!txt || !activeChatPhone) return;
+    saveAndPushChatMessage(activeChatPhone, 'manager', txt, null);
+    inp.value = '';
+    renderManagerChat();
+}
+
+function handleManagerImageUpload(e) {
+    var file = e.target.files[0];
+    e.target.value = '';
+    if (!file || !activeChatPhone) return;
+    var ph = activeChatPhone;
+    compressImage(file, function(data) { saveAndPushChatMessage(ph, 'manager', '📷 Фото', data); renderManagerChat(); });
+}
+
+function saveAndPushChatMessage(phone, sender, text, img) {
+    var now = new Date();
+    var msg = { id: Date.now(), phone: phone, sender: sender, text: text, time: String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') };
+    var local = img ? Object.assign({image: img}, msg) : msg;
+    if (!db.messages) db.messages = [];
+    db.messages.push(local);
+    saveDb();
+    pushItems([{t: 'm', data: msg, img: img || null, auth: sender === 'client' && currentClient ? currentClient.password : undefined}]);
+}
+
+// ----- ПІДБІР ЗАПЧАСТИН МЕНЕДЖЕРОМ -----
+function openPartOfferModal(orderId) {
+    activeOfferOrderId = orderId;
+    var container = document.getElementById('offer-items-container');
+    container.innerHTML = '';
+    addOfferRow();
+    document.getElementById('part-offer-modal').classList.remove('hidden');
+    document.getElementById('part-offer-modal').classList.add('flex');
+}
+
+function closePartOfferModal() {
+    activeOfferOrderId = null;
+    document.getElementById('part-offer-modal').classList.add('hidden');
+    document.getElementById('part-offer-modal').classList.remove('flex');
+}
+
+function addOfferRow() {
+    var dl = document.getElementById('ware-dl');
+    if (!dl) { dl = document.createElement('datalist'); dl.id = 'ware-dl'; document.body.appendChild(dl); }
+    dl.innerHTML = db.warehouse.map(function(w) { return '<option value="' + esc(w.name) + '">'; }).join('');
+    var div = document.createElement('div');
+    div.className = "offer-row grid grid-cols-6 gap-2 bg-gray-900/50 p-2 rounded-xl border border-gray-700/60";
+    div.innerHTML = '<input type="text" list="ware-dl" onchange="offerPick(this)" placeholder="Найменування (видно клієнту)" class="col-span-6 sm:col-span-3 bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white offer-desc">' +
+        '<input type="text" placeholder="Кат. № (лише менеджеру)" class="col-span-6 sm:col-span-3 bg-gray-900 border border-amber-500/40 rounded-xl p-2 text-xs text-white uppercase offer-cat">' +
+        '<input type="number" min="1" value="1" placeholder="К-сть" class="col-span-2 bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white offer-qty">' +
+        '<input type="number" step="0.01" placeholder="Ціна за од." class="col-span-3 bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white offer-price">' +
+        '<button type="button" onclick="this.parentNode.remove()" class="col-span-1 text-red-400"><i class="fa-solid fa-trash"></i></button>';
+    document.getElementById('offer-items-container').appendChild(div);
+}
+
+function offerPick(inp) {
+    var w = db.warehouse.find(function(x) { return x.name === inp.value; });
+    if (!w) return;
+    var r = inp.parentNode;
+    r.querySelector('.offer-cat').value = w.catNo || '';
+    r.querySelector('.offer-price').value = w.price;
+    r.dataset.cost = w.cost; r.dataset.wareid = w.id;
+}
+
+function sendPartOffer() {
+    var ord = db.orders.find(function(o) { return o.id === activeOfferOrderId; });
+    if (!ord) return;
+
+    var rows = document.querySelectorAll('.offer-row');
+    var offered = [];
+    rows.forEach(function(r) {
+        var d = r.querySelector('.offer-desc').value.trim();
+        var p = parseFloat(r.querySelector('.offer-price').value) || 0;
+        var q = parseFloat(r.querySelector('.offer-qty').value) || 1;
+        if (d) offered.push({ desc: d, cost: parseFloat(r.dataset.cost) || 0, wareId: r.dataset.wareid ? parseInt(r.dataset.wareid) : null, pend: r.dataset.wareid ? undefined : true, catNo: r.querySelector('.offer-cat').value.trim().toUpperCase(), price: p, qty: q, type: "Запчастина" });
+    });
+
+    if (offered.length === 0) {
+        alert("Вкажіть хоча б один варіант запчастини!");
+        return;
+    }
+
+    ord.offeredItems = offered;
+    ord.status = 'Підбір запчастин';
+    ord.updatedAt = Date.now();
+    ensureOrderMeta(ord);
+    saveDb();
+    pushItems([{t: 'o', data: ord, notify: true}]);
+    closePartOfferModal();
+    refreshManagerViews();
+    alert("Перелік запчастин надіслано клієнту!");
+}
+
+function confirmClientOrder(orderId) {
+    var ord = db.orders.find(function(o) { return o.id === orderId; });
+    if (!ord) return;
+    ord.status = 'В роботі';
+    ord.updatedAt = Date.now();
+    ensureOrderMeta(ord);
+    saveDb();
+    pushItems([{t: 'o', data: ord}]);
+    refreshManagerViews();
+    alert("Замовлення підтверджено та переведено в роботу!");
+}
+
+function openClientSettingsModal() {
+    document.getElementById('c-new-pass').value = '';
+    document.getElementById('c-conf-pass').value = '';
+    document.getElementById('c-settings-msg').classList.add('hidden');
+    document.getElementById('client-settings-modal').classList.remove('hidden');
+    document.getElementById('client-settings-modal').classList.add('flex');
+}
+
+function closeClientSettingsModal() {
+    document.getElementById('client-settings-modal').classList.add('hidden');
+    document.getElementById('client-settings-modal').classList.remove('flex');
+}
+
+function changeClientPassword(e) {
+    e.preventDefault();
+    var p1 = document.getElementById('c-new-pass').value;
+    var p2 = document.getElementById('c-conf-pass').value;
+    var msg = document.getElementById('c-settings-msg');
+    if (p1 !== p2) {
+        alert("Паролі не збігаються!");
+        return;
+    }
+    var oldPass = currentClient.password;
+    currentClient.password = p1;
+    touchClient(currentClient, oldPass);
+    saveDb();
+    saveSession(currentClient.phone, p1);
+    msg.innerText = "Пароль успішно змінено!";
+    msg.classList.remove('hidden');
+    setTimeout(closeClientSettingsModal, 1500);
+}
+
+function saveDb() {
+    if (currentClient) {
+        for (var i = 0; i < db.clients.length; i++) {
+            if (db.clients[i].id === currentClient.id) {
+                db.clients[i] = currentClient;
+                break;
+            }
+        }
+    }
+    cloudSetBig('zenparts_db', JSON.stringify(db));
+}
+
+function switchTab(tab) {
+    activeTab = tab;
+    ['dashboard', 'new', 'clients', 'warehouse', 'orders'].forEach(function(t) {
+        document.getElementById('tab-' + t).classList.add('hidden');
+        document.getElementById('btn-' + t).className = "relative px-3 py-2 rounded-xl bg-gray-700 text-gray-200 text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5";
+    });
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+    document.getElementById('btn-' + tab).className = "relative px-3 py-2 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5 shadow";
+
+    if (tab === 'new') renderNewOrders();
+    if (tab === 'clients') renderClients();
+    if (tab === 'warehouse') renderWarehouse();
+    if (tab === 'orders') renderOrders();
+    if (tab === 'dashboard') updateDashboard();
+}
+
+function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); document.getElementById('settings-modal').classList.add('flex'); }
+function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); document.getElementById('settings-modal').classList.remove('flex'); }
+
+function changeManagerPassword(e) {
+    e.preventDefault();
+    var cur = document.getElementById('set-current-pass').value;
+    var nw = document.getElementById('set-new-pass').value;
+    if (cur !== managerPassword) { document.getElementById('settings-error').innerText = "Невірний поточний пароль"; document.getElementById('settings-error').classList.remove('hidden'); return; }
+    managerPassword = nw;
+    cloudSet('zenparts_manager_pass', managerPassword);
+    document.getElementById('settings-success').innerText = "Пароль змінено!";
+    document.getElementById('settings-success').classList.remove('hidden');
+    setTimeout(closeSettingsModal, 1500);
+}
+
+// ----- СКЛАД (ІЗ РЕДАГУВАННЯМ) -----
+function renderWarehouse() {
+    var query = (document.getElementById('warehouse-search').value || '').toLowerCase();
+    var html = '';
+    db.warehouse.forEach(function(w) {
+        if ((w.name + ' ' + (w.supplier || '') + ' ' + (w.catNo || '')).toLowerCase().indexOf(query) === -1) return;
+        var lowStock = w.qty <= 1 ? 'text-red-400 font-bold' : '';
+        html += '<tr class="hover:bg-gray-700/30"><td class="p-3">' + esc(w.name) + '<br><span class="text-xs text-gray-400">' + (w.catNo ? 'Кат. №: ' + esc(w.catNo) + ' · ' : '') + '<i class="fa-solid fa-truck-field mr-1"></i>' + esc(w.supplier || 'постачальник не вказаний') + '</span></td><td class="p-3 text-center ' + lowStock + '">' + w.qty + ' ' + esc(w.unit) + '</td><td class="p-3 text-right">' + w.cost + ' грн</td><td class="p-3 text-right font-semibold text-white">' + w.price + ' грн</td><td class="p-3 text-right whitespace-nowrap"><button onclick="editWarehouseItem(' + w.id + ')" class="text-blue-400 mr-2" title="Редагувати"><i class="fa-solid fa-pen"></i></button><button onclick="deleteWarehouseItem(' + w.id + ')" class="text-red-400" title="Видалити"><i class="fa-solid fa-trash"></i></button></td></tr>';
+    });
+    renderPending();
+    document.getElementById('warehouse-table-body').innerHTML = html || '<tr><td colspan="5" class="p-4 text-center text-gray-500">Порожньо</td></tr>';
+}
+
+function editWarehouseItem(id) {
+    var w = db.warehouse.find(function(x) { return x.id === id; });
+    if (!w) return;
+    document.getElementById('ware-edit-id').value = w.id;
+    document.getElementById('ware-name').value = w.name || '';
+    document.getElementById('ware-supplier').value = w.supplier || '';
+    document.getElementById('ware-catno').value = w.catNo || '';
+    document.getElementById('ware-qty').value = w.qty;
+    document.getElementById('ware-unit').value = w.unit || 'шт';
+    document.getElementById('ware-cost').value = w.cost;
+    document.getElementById('ware-price').value = w.price;
+    document.getElementById('ware-form-title').innerHTML = '<i class="fa-solid fa-pen text-blue-500"></i><span>Редагувати товар</span>';
+    document.getElementById('ware-submit-btn').innerText = 'Зберегти зміни';
+    document.getElementById('ware-cancel-btn').classList.remove('hidden');
+}
+
+function resetWarehouseForm() {
+    document.getElementById('warehouse-form').reset();
+    document.getElementById('ware-edit-id').value = '';
+    document.getElementById('ware-form-title').innerHTML = '<i class="fa-solid fa-boxes-stacked text-blue-500"></i><span>Оприбуткувати товар</span>';
+    document.getElementById('ware-submit-btn').innerText = 'Додати';
+    document.getElementById('ware-cancel-btn').classList.add('hidden');
+}
+
+function saveWarehouseItem(e) {
+    e.preventDefault();
+    var editId = parseInt(document.getElementById('ware-edit-id').value);
+    var data = {
+        name: document.getElementById('ware-name').value.trim(),
+        supplier: document.getElementById('ware-supplier').value.trim(),
+        catNo: document.getElementById('ware-catno').value.trim().toUpperCase(),
+        qty: parseFloat(document.getElementById('ware-qty').value),
+        unit: document.getElementById('ware-unit').value,
+        cost: parseFloat(document.getElementById('ware-cost').value),
+        price: parseFloat(document.getElementById('ware-price').value)
+    };
+    if (editId) {
+        var w = db.warehouse.find(function(x) { return x.id === editId; });
+        if (w) Object.assign(w, data);
+        toast('Товар оновлено ✓');
+    } else {
+        data.id = Date.now();
+        db.warehouse.push(data);
+        toast('Товар додано на склад ✓');
+    }
+    saveDb();
+    resetWarehouseForm();
+    renderWarehouse();
+}
+
+function deleteWarehouseItem(id) {
+    if (!confirm("Видалити позицію зі складу?")) return;
+    db.warehouse = db.warehouse.filter(function(w) { return w.id !== id; });
+    saveDb();
+    renderWarehouse();
+}
+
+// ----- БАЗА КЛІЄНТІВ (ІЗ РЕДАГУВАННЯМ ТА СУМОЮ ПОКУПОК) -----
+function renderClients() {
+    var query = (document.getElementById('client-search').value || '').toLowerCase();
+    var tbody = document.getElementById('clients-table-body');
+    var html = '';
+    for (var i = 0; i < db.clients.length; i++) {
+        var c = db.clients[i];
+        var disc = getClientDiscount(c.id);
+        var spent = getClientTotalSpent(c.id);
+        if ((c.name + ' ' + c.phone + ' ' + (c.car || '') + ' ' + (c.plate || '')).toLowerCase().indexOf(query) !== -1) {
+            var vc = getVehicles(c).length;
+            html += '<tr class="hover:bg-gray-700/30 cursor-pointer" onclick="openClientCard(' + c.id + ')"><td class="p-3">#' + String(c.id).slice(-5) + '</td><td class="p-3">' + esc(c.name) + '<br><span class="text-xs text-blue-400">' + esc(c.phone) + '</span></td><td class="p-3">' + esc(c.car || '—') + '<br><span class="text-xs text-gray-400 font-mono">' + esc(c.plate || '') + '</span>' + (vc > 1 ? '<br><span class="text-[11px] text-gray-500">+ ще авто: ' + (vc - 1) + '</span>' : '') + '</td><td class="p-3"><span class="text-emerald-400 font-bold">' + disc + '%</span><br><span class="text-[11px] text-gray-400">' + spent.toFixed(0) + ' грн</span></td><td class="p-3 text-right whitespace-nowrap"><button onclick="event.stopPropagation();openManagerChat(' + c.id + ')" class="text-blue-400 mr-2" title="Чат"><i class="fa-solid fa-comments"></i></button><button onclick="event.stopPropagation();editClient(' + c.id + ')" class="text-gray-400 mr-2" title="Редагувати"><i class="fa-solid fa-pen"></i></button><button onclick="event.stopPropagation();deleteClient(' + c.id + ')" class="text-red-400" title="Видалити"><i class="fa-solid fa-trash"></i></button></td></tr>';
+        }
+    }
+    tbody.innerHTML = html || '<tr><td colspan="5" class="p-4 text-center text-gray-500">Порожньо</td></tr>';
+}
+
+function editClient(id) {
+    var c = db.clients.find(function(x) { return x.id === id; });
+    if (!c) return;
+    document.getElementById('client-edit-id').value = c.id;
+    document.getElementById('client-name').value = c.name || '';
+    document.getElementById('client-phone').value = c.phone || '';
+    document.getElementById('client-car').value = c.car || '';
+    document.getElementById('client-plate').value = c.plate || '';
+    document.getElementById('client-form-title').innerHTML = '<i class="fa-solid fa-user-pen text-blue-500"></i><span>Редагувати клієнта</span>';
+    document.getElementById('client-submit-btn').innerText = 'Оновити';
+    document.getElementById('client-cancel-btn').classList.remove('hidden');
+}
+
+function resetClientForm() {
+    document.getElementById('client-form').reset();
+    document.getElementById('client-edit-id').value = '';
+    document.getElementById('client-form-title').innerHTML = '<i class="fa-solid fa-user-plus text-blue-500"></i><span>Новий клієнт</span>';
+    document.getElementById('client-submit-btn').innerText = 'Зберегти';
+    document.getElementById('client-cancel-btn').classList.add('hidden');
+}
+
+function saveClient(e) {
+    e.preventDefault();
+    var editId = parseInt(document.getElementById('client-edit-id').value);
+    var phone = normPhone(document.getElementById('client-phone').value);
+    var existing = findClientByPhone(phone);
+    if (existing && existing.id !== editId) { alert("Клієнт з таким номером уже існує"); return; }
+    var car = document.getElementById('client-car').value.trim();
+    var plate = document.getElementById('client-plate').value.trim().toUpperCase();
+
+    if (editId) {
+        var c = db.clients.find(function(x) { return x.id === editId; });
+        if (c) {
+            c.name = document.getElementById('client-name').value.trim();
+            c.phone = phone;
+            c.car = car;
+            c.plate = plate;
+            if (!c.vehicles || !c.vehicles.length) c.vehicles = [{car: car, plate: plate}];
+            else { c.vehicles[0].car = car; c.vehicles[0].plate = plate; }
+            touchClient(c);
+            toast('Дані клієнта оновлено ✓');
+        }
+    } else {
+        var newC = {
+            id: Date.now(),
+            name: document.getElementById('client-name').value.trim(),
+            phone: phone,
+            car: car,
+            plate: plate,
+            password: "",
+            vehicles: [{car: car, plate: plate}]
+        };
+        db.clients.push(newC);
+        touchClient(newC);
+        toast('Клієнта додано ✓');
+    }
+    saveDb();
+    resetClientForm();
+    renderClients();
+}
+
+function deleteClient(id) {
+    var c = db.clients.filter(function(x) { return x.id === id; })[0];
+    if (!c || !confirm("Видалити клієнта " + c.name + "?")) return;
+    db.clients = db.clients.filter(function(x) { return x.id !== id; });
+    pushItems([{t: 'c', data: {phone: c.phone, deleted: true, updatedAt: Date.now()}}]);
+    saveDb();
+    renderClients();
+}
+
+// ----- ЗАМОВЛЕННЯ МЕНЕДЖЕРА: ПЕРЕМИКАЧ АКТИВНІ / АРХІВ -----
+function switchOrdersSubTab(sub) {
+    ordersSubTab = sub;
+    var btnAct = document.getElementById('orders-subtab-active');
+    var btnArc = document.getElementById('orders-subtab-archive');
+    if (sub === 'active') {
+        btnAct.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow flex items-center justify-center gap-1.5";
+        btnArc.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white flex items-center justify-center gap-1.5";
+    } else {
+        btnArc.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow flex items-center justify-center gap-1.5";
+        btnAct.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white flex items-center justify-center gap-1.5";
+    }
+    renderOrders();
+}
+
+function renderOrders() {
+    var query = ((document.getElementById('order-search') || {}).value || '').toLowerCase();
+    var tbody = document.getElementById('orders-table-body');
+    var html = '';
+    var activeCount = 0;
+    var archiveCount = 0;
+
+    for (var i = db.orders.length - 1; i >= 0; i--) {
+        var o = db.orders[i];
+        var isArchived = (o.status === 'Видано');
+        if (isArchived) archiveCount++; else activeCount++;
+
+        if (ordersSubTab === 'active' && isArchived) continue;
+        if (ordersSubTab === 'archive' && !isArchived) continue;
+
+        var cl = db.clients.find(function(c) { return c.id === o.clientId; }) || {name: o.clientName || "Невідомий"};
+        if (query && (cl.name + ' ' + (o.car || '') + ' ' + o.id + ' ' + (o.notes || '')).toLowerCase().indexOf(query) === -1) continue;
+
+        var disc = orderDiscountAmount(o);
+        var sumCell = '<div class="font-semibold text-white">' + orderSum(o).toFixed(2) + ' грн</div>' +
+            (disc > 0 ? '<div class="text-[11px] text-amber-300">Знижка -' + o.discountPct + '% (-' + disc.toFixed(0) + ' грн)</div>' : '');
+
+        html += '<tr class="hover:bg-gray-700/30">' +
+            '<td class="p-3">#' + String(o.id).slice(-6) + '<br><span class="text-xs text-gray-400">' + esc(o.date) + '</span></td>' +
+            '<td class="p-3">' + esc(cl.name) + (o.car ? '<br><span class="text-xs text-gray-400">' + esc(o.car) + '</span>' : '') + '</td>' +
+            '<td class="p-3">' + (o.mileage || '—') + '</td>' +
+            '<td class="p-3">' + sumCell + '</td>' +
+            '<td class="p-3"><div class="flex flex-col gap-1.5 items-start">' + statusSelectHtml(o) + paidToggleHtml(o) + '</div></td>' +
+            '<td class="p-3 text-right whitespace-nowrap">' +
+                '<button onclick="openNewOrderModal(' + o.id + ')" class="text-gray-400 mr-2" title="Редагувати"><i class="fa-solid fa-pen"></i></button>' +
+                '<button onclick="openInvoice(' + o.id + ')" class="text-blue-400 mr-2" title="Акт / Друк"><i class="fa-solid fa-print"></i></button>' +
+                '<button onclick="deleteOrder(' + o.id + ')" class="text-red-400" title="Видалити"><i class="fa-solid fa-trash"></i></button>' +
+            '</td></tr>';
+    }
+
+    var elAct = document.getElementById('count-orders-active');
+    var elArc = document.getElementById('count-orders-archive');
+    if (elAct) elAct.innerText = activeCount;
+    if (elArc) elArc.innerText = archiveCount;
+
+    var emptyMsg = ordersSubTab === 'active' ? 'Немає активних замовлень у роботі' : 'Архів виданих замовлень порожній';
+    tbody.innerHTML = html || '<tr><td colspan="6" class="p-6 text-center text-gray-500">' + emptyMsg + '</td></tr>';
+}
+
+function writeOffStock(o) {
+    if (o.stockWritten) return;
+    (o.items || []).forEach(function(it) {
+        var w = it.wareId ? db.warehouse.find(function(x) { return x.id === it.wareId; }) : null;
+        if (w) w.qty = Math.max(0, w.qty - (it.qty || 1));
+    });
+    o.stockWritten = true;
+}
+
+function updateOrderStatus(id, status) {
+    var ord = db.orders.find(function(o) { return o.id === id; });
+    if (!ord) return;
+    var prevStatus = ord.status;
+    ord.status = status;
+    if (status === 'Видано' && (ord.items || []).some(function(i) { return i.pend && !i.wareId; }) && !confirm('Є позиції, які ще не оприбутковані від постачальника. Видати все одно?')) {
+        ord.status = prevStatus;
+        refreshManagerViews();
+        return;
+    }
+    if (status === 'Видано') {
+        writeOffStock(ord);
+        toast('📦 Замовлення #' + String(ord.id).slice(-6) + ' перенесено в Архів');
+    } else if (prevStatus === 'Видано' && status !== 'Видано') {
+        toast('🔄 Замовлення #' + String(ord.id).slice(-6) + ' повернуто з Архіву в роботу');
+    }
+    ord.updatedAt = Date.now();
+    ensureOrderMeta(ord);
+    saveDb();
+    pushItems([{t: 'o', data: ord}]);
+    refreshManagerViews();
+}
+
+function deleteOrder(id) {
+    var ord = db.orders.find(function(o) { return o.id === id; });
+    if (!ord || !confirm("Видалити замовлення?")) return;
+    ensureOrderMeta(ord);
+    db.orders = db.orders.filter(function(o) { return o.id !== id; });
+    pushItems([{t: 'o', data: {id: id, deleted: true, clientPhone: ord.clientPhone, updatedAt: Date.now()}}]);
+    saveDb();
+    refreshManagerViews();
+}
+
+// ----- ДАШБОРД З УРАХУВАННЯМ ЗНИЖОК, ОПЛАТ І ОСТАННІХ ЗАМОВЛЕНЬ -----
+function updateDashboard() {
+    document.getElementById('stat-clients').innerText = db.clients.length;
+    var activeOrdersCount = db.orders.filter(function(o) { return o.status !== 'Видано'; }).length;
+    document.getElementById('stat-orders').innerText = activeOrdersCount + ' актив. / ' + db.orders.length + ' всього';
+
+    var rev = 0, cost = 0, workRev = 0, partsRev = 0, unpaidIssued = 0;
+    db.orders.forEach(function(o) {
+        if (o.status !== 'Видано') return;
+        if (o.paid === false) {
+            unpaidIssued += orderSum(o);
+            return;
+        }
+        var factor = 1 - ((parseFloat(o.discountPct) || 0) / 100);
+        (o.items || []).forEach(function(it) {
+            var line = (it.price * (it.qty || 1)) * factor;
+            rev += line;
+            if (it.type === 'Запчастина') {
+                partsRev += line;
+                cost += (it.cost || 0) * (it.qty || 1);
+            } else {
+                workRev += line;
+            }
+        });
+    });
+
+    document.getElementById('stat-revenue').innerHTML = rev.toFixed(0) + ' грн' +
+        (unpaidIssued > 0 ? '<div class="text-[11px] text-amber-400 font-normal mt-0.5">Борг (видані): ' + unpaidIssued.toFixed(0) + ' грн</div>' : '');
+    document.getElementById('stat-profit').innerText = (rev - cost).toFixed(0) + ' грн';
+    document.getElementById('analytics-work-revenue').innerText = workRev.toFixed(2) + ' грн';
+    document.getElementById('analytics-parts-revenue').innerText = partsRev.toFixed(2) + ' грн';
+    document.getElementById('analytics-parts-cost').innerText = cost.toFixed(2) + ' грн';
+    document.getElementById('analytics-parts-profit').innerText = (partsRev - cost).toFixed(2) + ' грн';
+
+    var recentBody = document.getElementById('recent-orders-list');
+    if (recentBody) {
+        var recent = db.orders.slice(-7).reverse();
+        if (!recent.length) {
+            recentBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Немає даних</td></tr>';
+        } else {
+            recentBody.innerHTML = recent.map(function(o) {
+                var cl = db.clients.find(function(c) { return c.id === o.clientId; }) || {name: o.clientName || 'Невідомий'};
+                return '<tr class="hover:bg-gray-700/30 cursor-pointer" onclick="switchTab(\'orders\');openNewOrderModal(' + o.id + ')">' +
+                    '<td class="p-3 font-mono text-xs">#' + String(o.id).slice(-6) + '</td>' +
+                    '<td class="p-3 text-xs text-gray-400">' + esc(o.date) + '</td>' +
+                    '<td class="p-3 font-medium text-white">' + esc(cl.name) + '</td>' +
+                    '<td class="p-3 text-xs text-gray-300">' + esc(o.car || cl.car || '—') + '</td>' +
+                    '<td class="p-3 font-bold text-emerald-400">' + orderSum(o).toFixed(2) + ' грн</td>' +
+                    '<td class="p-3"><span class="text-xs px-2 py-0.5 rounded-full ' + statusBadge(o.status) + '">' + esc(o.status) + '</span></td>' +
+                '</tr>';
+            }).join('');
+        }
+    }
+}
+
+// ----- МОДАЛКА ЗАМОВЛЕННЯ: КЕРУВАННЯ ЗНИЖКОЮ ТА СТАТУСОМ -----
+function refreshOrderClientDiscountInfo(keepExisting) {
+    var cid = parseInt(document.getElementById('order-client-id').value);
+    var autoDisc = cid ? getClientDiscount(cid) : 0;
+    var spent = cid ? getClientTotalSpent(cid) : 0;
+    var hint = document.getElementById('order-client-disc-hint');
+    if (hint) {
+        hint.innerText = '(за покупками ' + spent.toFixed(0) + ' грн → ' + autoDisc + '%)';
+    }
+    var cb = document.getElementById('order-apply-discount');
+    var pctInp = document.getElementById('order-discount-pct');
+    if (!keepExisting && cb && cb.checked) {
+        pctInp.value = autoDisc;
+    }
+    calcOrderTotal();
+}
+
+function toggleOrderDiscount() {
+    var cb = document.getElementById('order-apply-discount');
+    var pctInp = document.getElementById('order-discount-pct');
+    var cid = parseInt(document.getElementById('order-client-id').value);
+    var autoDisc = cid ? getClientDiscount(cid) : 0;
+
+    pctInp.disabled = !cb.checked;
+    if (cb.checked) {
+        if (!parseFloat(pctInp.value)) pctInp.value = autoDisc;
+    } else {
+        pctInp.value = 0;
+    }
+    calcOrderTotal();
+}
+
+function openNewOrderModal(editId) {
+    var o = editId ? db.orders.find(function(x) { return x.id === editId; }) : null;
+    var select = document.getElementById('order-client-id');
+    select.innerHTML = db.clients.map(function(c) { return '<option value="' + c.id + '">' + esc(c.name) + ' (' + esc(c.phone) + ')</option>'; }).join('');
+    document.getElementById('order-edit-id').value = o ? o.id : '';
+    document.getElementById('order-modal-title').innerText = o ? 'Редагування замовлення #' + String(o.id).slice(-6) : 'Наряд-замовлення';
+    document.getElementById('order-mileage').value = o ? (o.mileage || '') : '';
+    document.getElementById('order-notes').value = o ? (o.notes || '') : '';
+    document.getElementById('order-paid').value = (o && o.paid) ? '1' : '0';
+    document.getElementById('order-status-select').value = o ? (o.status || 'В роботі') : 'В роботі';
+
+    if (o) select.value = o.clientId;
+    setupClientBtn(select);
+    fillOrderCars();
+
+    if (o && o.car) {
+        var cs = document.getElementById('order-car');
+        if (![].some.call(cs.options, function(x) { return x.value === o.car; })) cs.insertAdjacentHTML('beforeend', '<option value="' + esc(o.car) + '">' + esc(o.car) + '</option>');
+        cs.value = o.car;
+    }
+
+    var cb = document.getElementById('order-apply-discount');
+    var pctInp = document.getElementById('order-discount-pct');
+    var savedPct = o ? (parseFloat(o.discountPct) || 0) : 0;
+    cb.checked = savedPct > 0;
+    pctInp.disabled = !cb.checked;
+    pctInp.value = savedPct;
+    refreshOrderClientDiscountInfo(true);
+
+    var box = document.getElementById('order-items-container');
+    box.innerHTML = '';
+    box.oninput = calcOrderTotal;
+    if (o && o.items && o.items.length) o.items.forEach(function(it) { addOrderRow(it); }); else addOrderRow({});
+    calcOrderTotal();
+    document.getElementById('order-modal').classList.remove('hidden');
+    document.getElementById('order-modal').classList.add('flex');
+}
+
+function closeNewOrderModal() { document.getElementById('order-modal').classList.add('hidden'); document.getElementById('order-modal').classList.remove('flex'); }
+function setupClientBtn(select) {
+    var btn = document.getElementById('order-client-btn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'order-client-btn'; btn.type = 'button';
+        btn.className = 'w-full text-left bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white flex justify-between items-center gap-2';
+        btn.onclick = openClientPicker;
+        select.parentNode.insertBefore(btn, select);
+        select.style.display = 'none';
+        select.required = false;
+    }
+    updateClientBtn();
+}
+function updateClientBtn() {
+    var sel = document.getElementById('order-client-id'), o = sel.options[sel.selectedIndex];
+    document.getElementById('order-client-btn').innerHTML = '<span class="truncate">' + (o ? o.text : 'Оберіть клієнта') + '</span><i class="fa-solid fa-magnifying-glass text-gray-400"></i>';
+}
+function openClientPicker() {
+    var m = document.getElementById('client-pick-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+    document.getElementById('cp-search').value = '';
+    renderClientPicker();
+    setTimeout(function() { document.getElementById('cp-search').focus(); }, 80);
+}
+function closeClientPicker() { var m = document.getElementById('client-pick-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function renderClientPicker() {
+    var q = document.getElementById('cp-search').value.toLowerCase().trim();
+    var list = db.clients.filter(function(c) {
+        return !q || (c.name + ' ' + c.phone + ' ' + getVehicles(c).map(function(v) { return v.car + ' ' + v.plate; }).join(' ')).toLowerCase().indexOf(q) !== -1;
+    }).slice(0, 50);
+    document.getElementById('cp-list').innerHTML = list.map(function(c) {
+        var v = getVehicles(c).map(function(x) { return x.car + ' ' + x.plate; }).join(', ');
+        var disc = getClientDiscount(c.id);
+        return '<button type="button" onclick="pickClient(' + c.id + ')" class="w-full text-left p-3 hover:bg-gray-700/30"><div class="flex justify-between"><span class="text-sm font-semibold text-white">' + esc(c.name) + '</span><span class="text-xs text-emerald-400 font-bold">Знижка: ' + disc + '%</span></div><div class="text-xs text-blue-400">' + esc(c.phone) + '</div>' + (v ? '<div class="text-xs text-gray-400 truncate">' + esc(v) + '</div>' : '') + '</button>';
+    }).join('') || '<p class="p-4 text-center text-gray-500 text-sm">Нікого не знайдено</p>';
+}
+function pickClient(id) {
+    document.getElementById('order-client-id').value = id;
+    updateClientBtn();
+    fillOrderCars();
+    closeClientPicker();
+}
+
+var descTarget = null;
+function openDescEditor(inp) {
+    descTarget = inp;
+    var ta = document.getElementById('desc-text');
+    ta.value = inp.value;
+    var m = document.getElementById('desc-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+    descSuggest();
+    setTimeout(function() { ta.focus(); }, 80);
+}
+function closeDescEditor() { var m = document.getElementById('desc-modal'); m.classList.add('hidden'); m.classList.remove('flex'); descTarget = null; }
+function applyDesc() {
+    if (descTarget) {
+        var v = document.getElementById('desc-text').value.trim();
+        if (v !== descTarget.value) {
+            var row = descTarget.parentNode; row.dataset.wareid = ''; row.dataset.recv = '';
+        }
+        descTarget.value = v;
+    }
+    closeDescEditor();
+}
+function descSuggest() {
+    var q = document.getElementById('desc-text').value.toLowerCase().trim(), box = document.getElementById('desc-suggest');
+    var hits = q.length < 2 ? [] : db.warehouse.filter(function(w) { return (w.name + ' ' + (w.catNo || '')).toLowerCase().indexOf(q) !== -1; }).slice(0, 4);
+    box.innerHTML = hits.length ? '<div class="text-[11px] text-gray-500">На складі:</div>' + hits.map(function(w) {
+        return '<button type="button" onclick="descPickWare(' + w.id + ')" class="w-full text-left text-xs bg-gray-900 border border-gray-700 rounded-lg p-2 text-white">' + esc(w.name) + ' <span class="text-gray-400">· ' + w.qty + ' ' + esc(w.unit) + ' · ' + w.price + ' грн</span></button>';
+    }).join('') : '';
+}
+function descPickWare(id) {
+    var w = db.warehouse.find(function(x) { return x.id === id; });
+    if (!w || !descTarget) return;
+    var row = descTarget.parentNode;
+    descTarget.value = w.name;
+    row.querySelector('.item-price').value = w.price;
+    row.querySelector('.item-cost').value = w.cost;
+    row.dataset.wareid = w.id; row.dataset.cat = w.catNo || ''; row.dataset.recv = '';
+    closeDescEditor(); calcOrderTotal();
+}
+
+function pendingItems() {
+    var out = [];
+    db.orders.forEach(function(o) {
+        (o.items || []).forEach(function(it, idx) { if (it.pend && !it.wareId && !it.received) out.push({o: o, it: it, idx: idx}); });
+    });
+    return out;
+}
+function renderPending() {
+    var list = pendingItems(), box = document.getElementById('ware-pending-box');
+    if (!list.length) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    document.getElementById('ware-pending-list').innerHTML = list.map(function(x) {
+        var cl = db.clients.find(function(c) { return c.id === x.o.clientId; });
+        return '<div class="bg-gray-900/60 p-3 rounded-xl border border-gray-700/60 flex justify-between items-center gap-3"><div class="min-w-0"><div class="text-sm font-semibold text-white">' + esc(x.it.desc) + ' <span class="text-gray-400 font-normal">× ' + (x.it.qty || 1) + '</span></div><div class="text-xs text-gray-400 truncate">Замовлення #' + String(x.o.id).slice(-6) + (cl ? ' · ' + esc(cl.name) : '') + '</div></div><button onclick="openReceive(' + x.o.id + ',' + x.idx + ')" class="bg-blue-600 text-white text-xs font-medium px-3 py-2 rounded-xl whitespace-nowrap">Оприбуткувати</button></div>';
+    }).join('');
+}
+var recvRef = null;
+function openReceive(orderId, idx) {
+    var o = db.orders.find(function(x) { return x.id === orderId; });
+    if (!o || !o.items[idx]) return;
+    var it = o.items[idx];
+    recvRef = {orderId: orderId, idx: idx};
+    document.getElementById('rc-name').value = it.desc;
+    document.getElementById('rc-supplier').value = '';
+    document.getElementById('rc-cat').value = it.catNo || '';
+    document.getElementById('rc-qty').value = it.qty || 1;
+    document.getElementById('rc-cost').value = it.cost || '';
+    document.getElementById('rc-price').value = it.price || '';
+    var names = {}; db.warehouse.forEach(function(w) { if (w.supplier) names[w.supplier] = 1; });
+    document.getElementById('rc-suppliers').innerHTML = Object.keys(names).map(function(n) { return '<option value="' + esc(n) + '">'; }).join('');
+    var m = document.getElementById('receive-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+}
+function closeReceive() { var m = document.getElementById('receive-modal'); m.classList.add('hidden'); m.classList.remove('flex'); recvRef = null; }
+function saveReceive(e) {
+    e.preventDefault();
+    var o = recvRef && db.orders.find(function(x) { return x.id === recvRef.orderId; });
+    if (!o) return;
+    var it = o.items[recvRef.idx];
+    var qty = parseFloat(document.getElementById('rc-qty').value) || 0;
+    var w = {
+        id: Date.now(),
+        name: document.getElementById('rc-name').value.trim(),
+        supplier: document.getElementById('rc-supplier').value.trim(),
+        catNo: document.getElementById('rc-cat').value.trim().toUpperCase(),
+        qty: o.stockWritten ? Math.max(0, qty - (it.qty || 1)) : qty,
+        unit: 'шт',
+        cost: parseFloat(document.getElementById('rc-cost').value) || 0,
+        price: parseFloat(document.getElementById('rc-price').value) || 0
+    };
+    db.warehouse.push(w);
+    it.wareId = w.id; it.cost = w.cost; it.catNo = it.catNo || w.catNo; it.received = true; delete it.pend;
+    o.updatedAt = Date.now();
+    ensureOrderMeta(o);
+    saveDb();
+    pushItems([{t: 'o', data: o}]);
+    closeReceive();
+    renderWarehouse();
+    toast('Оприбутковано ✓');
+}
+
+function orderRowHtml(it) {
+    var cls = 'bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white ';
+    return '<input type="text" readonly onclick="openDescEditor(this)" placeholder="Натисніть і введіть назву" value="' + esc(it.desc || '') + '" class="flex-1 min-w-[150px] ' + cls + 'item-desc">' +
+        '<select class="' + cls + 'item-type"><option' + (it.type === 'Робота' ? '' : ' selected') + '>Запчастина</option><option' + (it.type === 'Робота' ? ' selected' : '') + '>Робота</option></select>' +
+        '<input type="number" min="0" step="any" value="' + (it.qty || 1) + '" title="Кількість" class="w-16 ' + cls + 'item-qty">' +
+        '<input type="number" step="0.01" placeholder="Ціна" value="' + (it.price || '') + '" class="w-24 ' + cls + 'item-price">' +
+        '<input type="number" step="0.01" placeholder="Закуп." value="' + (it.cost || '') + '" title="Закупівельна ціна (лише для обліку)" class="w-24 ' + cls + 'item-cost">' +
+        '<button type="button" onclick="this.parentNode.remove();calcOrderTotal()" class="text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>';
+}
+function addOrderRow(it) {
+    it = it || {};
+    var d = document.createElement('div');
+    d.className = 'flex flex-wrap items-center gap-2 item-row';
+    d.innerHTML = orderRowHtml(it);
+    d.dataset.wareid = it.wareId || '';
+    d.dataset.cat = it.catNo || '';
+    d.dataset.recv = it.received ? '1' : '';
+    document.getElementById('order-items-container').appendChild(d);
+    calcOrderTotal();
+}
+function addOrderItemRow() {
+    addOrderRow();
+    var ds = document.querySelectorAll('#order-items-container .item-desc');
+    openDescEditor(ds[ds.length - 1]);
+}
+function calcOrderTotal() {
+    var raw = 0;
+    document.querySelectorAll('#order-items-container .item-row').forEach(function(r) {
+        raw += (parseFloat(r.querySelector('.item-price').value) || 0) * (parseFloat(r.querySelector('.item-qty').value) || 0);
+    });
+    var cb = document.getElementById('order-apply-discount');
+    var pctInp = document.getElementById('order-discount-pct');
+    var pct = (cb && cb.checked) ? Math.min(100, Math.max(0, parseFloat(pctInp.value) || 0)) : 0;
+    var discVal = +(raw * (pct / 100)).toFixed(2);
+    var total = Math.max(0, raw - discVal);
+
+    var subRow = document.getElementById('order-subtotal-row');
+    var discRow = document.getElementById('order-discount-row');
+    if (pct > 0 && raw > 0) {
+        subRow.classList.remove('hidden');
+        discRow.classList.remove('hidden');
+        document.getElementById('order-modal-subtotal').innerText = raw.toFixed(2) + ' грн';
+        document.getElementById('order-modal-discount').innerText = '-' + discVal.toFixed(2) + ' грн (' + pct + '%)';
+    } else {
+        if (subRow) subRow.classList.add('hidden');
+        if (discRow) discRow.classList.add('hidden');
+    }
+    document.getElementById('order-modal-total').innerText = total.toFixed(2) + ' грн';
+}
+
+function openWarehouseSelector() {
+    document.getElementById('ware-select-list').innerHTML = db.warehouse.map(function(w) {
+        return '<button type="button" onclick="addFromWarehouse(' + w.id + ')" class="w-full text-left p-3 flex justify-between gap-3 hover:bg-gray-700/30"><span class="text-sm text-white">' + esc(w.name) + '<br><span class="text-xs text-gray-400">' + (w.catNo ? esc(w.catNo) + ' · ' : '') + esc(w.supplier || '') + ' · залишок ' + w.qty + ' ' + esc(w.unit) + '</span></span><span class="font-bold text-emerald-400 whitespace-nowrap">' + w.price + ' грн</span></button>';
+    }).join('') || '<p class="p-4 text-center text-gray-500 text-sm">Склад порожній</p>';
+    var m = document.getElementById('ware-select-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+}
+function closeWarehouseSelector() { var m = document.getElementById('ware-select-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function addFromWarehouse(id) {
+    var w = db.warehouse.find(function(x) { return x.id === id; });
+    if (!w) return;
+    addOrderRow({desc: w.name, type: 'Запчастина', qty: 1, price: w.price, cost: w.cost, wareId: w.id, catNo: w.catNo});
+    closeWarehouseSelector();
+}
+
+function saveOrder(e) {
+    e.preventDefault();
+    var items = [];
+    document.querySelectorAll('#order-items-container .item-row').forEach(function(r) {
+        var d = r.querySelector('.item-desc').value.trim();
+        if (!d) return;
+        items.push({
+            desc: d,
+            type: r.querySelector('.item-type').value,
+            qty: parseFloat(r.querySelector('.item-qty').value) || 1,
+            price: parseFloat(r.querySelector('.item-price').value) || 0,
+            cost: parseFloat(r.querySelector('.item-cost').value) || 0,
+            wareId: r.dataset.wareid ? parseInt(r.dataset.wareid) : null,
+            catNo: r.dataset.cat || undefined,
+            received: r.dataset.recv ? true : undefined,
+            pend: (r.querySelector('.item-type').value === 'Запчастина' && !r.dataset.wareid && !r.dataset.recv) ? true : undefined
+        });
+    });
+    var eid = parseInt(document.getElementById('order-edit-id').value);
+    var o = eid ? db.orders.find(function(x) { return x.id === eid; }) : null;
+    var cid = parseInt(document.getElementById('order-client-id').value);
+    var newStatus = document.getElementById('order-status-select').value;
+
+    if (o) {
+        if (o.clientId !== cid) { o.clientPhone = ''; o.clientName = ''; }
+        o.clientId = cid;
+        o.status = newStatus;
+    } else {
+        o = { id: Date.now(), date: new Date().toISOString().slice(0,16).replace('T', ' '), clientId: cid, status: newStatus };
+        db.orders.push(o);
+    }
+
+    var cb = document.getElementById('order-apply-discount');
+    var pct = (cb && cb.checked) ? Math.min(100, Math.max(0, parseFloat(document.getElementById('order-discount-pct').value) || 0)) : 0;
+
+    o.car = document.getElementById('order-car').value;
+    o.mileage = document.getElementById('order-mileage').value;
+    o.notes = document.getElementById('order-notes').value;
+    o.paid = document.getElementById('order-paid').value === '1';
+    o.discountPct = pct;
+    o.items = items;
+    if (o.status === 'Видано') writeOffStock(o);
+    o.updatedAt = Date.now();
+    ensureOrderMeta(o);
+    saveDb();
+    pushItems([{t: 'o', data: o}]);
+    closeNewOrderModal();
+    refreshManagerViews();
+    toast(o.status === 'Видано' ? '📦 Замовлення збережено та перенесено в Архів' : 'Замовлення збережено ✓');
+}
+
+var invOrderId = null;
+function invFileName() { return 'Akt-' + String(invOrderId).slice(-6) + '.pdf'; }
+function invClient() {
+    var o = db.orders.find(function(x) { return x.id === invOrderId; });
+    return o ? db.clients.find(function(c) { return c.id === o.clientId; }) : null;
+}
+function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(function() {});
+}
+function invBlob(cb) {
+    if (!(window.html2canvas && window.jspdf)) { toast('PDF-модуль не завантажився — перевірте інтернет'); return; }
+    toast('Готую PDF…');
+    html2canvas(document.getElementById('printable-area'), {scale: 1.6, backgroundColor: '#ffffff'}).then(function(cv) {
+        var w = 210, m = 8, iw = w - 2 * m, ih = cv.height * iw / cv.width;
+        var pdf = new window.jspdf.jsPDF({unit: 'mm', format: [w, Math.max(297, ih + 2 * m)]});
+        pdf.addImage(cv.toDataURL('image/jpeg', 0.85), 'JPEG', m, m, iw, ih);
+        cb(pdf.output('blob'), pdf.output('datauristring'));
+    }).catch(function() { toast('Не вдалося створити PDF'); });
+}
+function invUpload(dataUri, send, cb) {
+    var cl = invClient();
+    if (!SYNC_URL || !mgrKey) { cb(null); return; }
+    fetch(SYNC_URL, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({key: mgrKey, file: {name: invFileName(), b64: dataUri.split(',')[1], phone: cl && cl.phone, send: send, caption: 'Акт ZenParts № ' + invOrderId}})})
+        .then(function(r) { return r.json(); }).then(function(r) { cb(r && r.url ? r : null); }).catch(function() { cb(null); });
+}
+function invDownload(blob) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = invFileName();
+    document.body.appendChild(a); a.click(); a.remove();
+}
+function invPrint() {
+    if (tg && tg.initData) { toast('У Telegram друк недоступний — зберігаю PDF, надрукуйте його з файлу'); invShare(); return; }
+    window.print();
+}
+function invShare() {
+    invBlob(function(blob, uri) {
+        var f = new File([blob], invFileName(), {type: 'application/pdf'});
+        if (navigator.canShare && navigator.canShare({files: [f]})) { navigator.share({files: [f], title: 'Акт ZenParts'}).catch(function() {}); return; }
+        invUpload(uri, null, function(r) {
+            if (r) { copyText(r.url); if (tg && tg.openLink) tg.openLink(r.url); else window.open(r.url, '_blank'); toast('PDF відкрито, посилання скопійовано'); }
+            else invDownload(blob);
+        });
+    });
+}
+function invTelegram() {
+    var cl = invClient();
+    invBlob(function(blob, uri) {
+        invUpload(uri, cl && cl.tgId ? 'client' : null, function(r) {
+            if (r && r.sent) { toast('Акт надіслано клієнту в Telegram ✓'); return; }
+            if (r) {
+                var u = 'https://t.me/share/url?url=' + encodeURIComponent(r.url) + '&text=' + encodeURIComponent('Акт ZenParts № ' + invOrderId);
+                if (tg && tg.openTelegramLink) tg.openTelegramLink(u); else window.open(u, '_blank');
+            } else invShare();
+        });
+    });
+}
+function invViber() {
+    invBlob(function(blob, uri) {
+        invUpload(uri, null, function(r) {
+            if (!r) { invShare(); return; }
+            var t = 'Акт ZenParts № ' + invOrderId + ': ' + r.url;
+            copyText(r.url);
+            toast('Посилання скопійовано — відкриваю Viber');
+            window.location.href = 'viber://forward?text=' + encodeURIComponent(t);
+        });
+    });
+}
+
+function openInvoice(id) {
+    var o = db.orders.find(function(x) { return x.id === id; });
+    if (!o) return;
+    var cl = db.clients.find(function(c) { return c.id === o.clientId; }) || {};
+    document.getElementById('inv-order-num').innerText = 'Акт № ' + o.id + (o.paid ? ' (ОПЛАЧЕНО)' : '');
+    document.getElementById('inv-date').innerText = o.date;
+    document.getElementById('inv-client-name').innerText = cl.name || '-';
+    document.getElementById('inv-client-phone').innerText = cl.phone || '-';
+    document.getElementById('inv-car-model').innerText = o.car || cl.car || '-';
+    document.getElementById('inv-car-plate').innerText = o.car ? '' : (cl.plate || '');
+    invOrderId = id;
+    
+    var tbody = document.getElementById('inv-items-body');
+    tbody.innerHTML = (o.items || []).map(function(it, idx) {
+        var line = it.price * (it.qty || 1);
+        return '<tr class="border-b"><td class="p-2">' + (idx+1) + '</td><td class="p-2">' + esc(it.desc) + '</td><td class="p-2 text-center">' + it.qty + '</td><td class="p-2 text-right">' + it.price.toFixed(2) + '</td><td class="p-2 text-right font-semibold">' + line.toFixed(2) + '</td></tr>';
+    }).join('');
+
+    var raw = orderRawSum(o);
+    var disc = orderDiscountAmount(o);
+    var subRow = document.getElementById('inv-sub-row');
+    var discRow = document.getElementById('inv-disc-row');
+    if (disc > 0) {
+        subRow.classList.remove('hidden');
+        discRow.classList.remove('hidden');
+        document.getElementById('inv-subtotal').innerText = raw.toFixed(2) + ' грн';
+        document.getElementById('inv-disc-label').innerText = 'Знижка (' + o.discountPct + '%):';
+        document.getElementById('inv-disc-val').innerText = '-' + disc.toFixed(2) + ' грн';
+    } else {
+        subRow.classList.add('hidden');
+        discRow.classList.add('hidden');
+    }
+    document.getElementById('inv-grand-total').innerText = orderSum(o).toFixed(2) + ' грн';
+    document.getElementById('invoice-modal').classList.remove('hidden');
+    document.getElementById('invoice-modal').classList.add('flex');
+}
+
+function closeInvoiceModal() { document.getElementById('invoice-modal').classList.add('hidden'); document.getElementById('invoice-modal').classList.remove('flex'); }
+function exportData() {
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+    var a = document.createElement('a'); a.href = dataStr; a.download = "backup.json"; a.click();
+}
+
+function fillOrderCars() {
+    var cid = parseInt(document.getElementById('order-client-id').value);
+    var c = db.clients.find(function(x) { return x.id === cid; });
+    var vehs = c ? getVehicles(c) : [];
+    var html = '<option value="">— авто не вказано —</option>';
+    vehs.forEach(function(v) { var t = v.car + ' (' + v.plate + ')'; html += '<option value="' + esc(t) + '">' + esc(t) + '</option>'; });
+    document.getElementById('order-car').innerHTML = html;
+    refreshOrderClientDiscountInfo(false);
+}
+
+function renderNewOrders() {
+    var box = document.getElementById('new-orders-list');
+    var list = db.orders.filter(function(o) { return o.status === 'Нове' || o.status === 'Очікує підтвердження'; }).reverse();
+    if (!list.length) { box.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Нових замовлень та заявок немає</p>'; return; }
+    box.innerHTML = list.map(function(o) {
+        var cl = db.clients.find(function(c) { return c.id === o.clientId; }) || {id: 0, name: o.clientName || 'Невідомий', phone: o.clientPhone || ''};
+        var desc = (o.items && o.items[0]) ? o.items[0].desc : '';
+        var isWaitConfirm = o.status === 'Очікує підтвердження';
+
+        return '<div class="bg-gray-900/60 p-4 rounded-xl border ' + (isWaitConfirm ? 'border-amber-500/50' : 'border-purple-500/30') + ' space-y-2">' +
+            '<div class="flex justify-between items-center"><span class="font-bold text-white">' + esc(cl.name) + '</span><span class="text-xs px-2 py-0.5 rounded-full ' + statusBadge(o.status) + '">' + esc(o.status) + '</span></div>' +
+            '<a href="tel:' + esc(cl.phone) + '" class="text-xs text-blue-400">' + esc(cl.phone) + '</a>' +
+            (o.car ? '<div class="text-xs text-gray-300"><i class="fa-solid fa-car text-blue-400 mr-1"></i>' + esc(o.car) + '</div>' : '') +
+            '<p class="text-sm text-gray-200">' + esc(desc) + '</p>' + mgrItemsHtml(o) +
+            '<div class="flex flex-wrap gap-2 pt-2">' +
+            (isWaitConfirm ? 
+                '<button onclick="confirmClientOrder(' + o.id + ')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-check mr-1"></i>Підтвердити й взяти в роботу</button>' :
+                '<button onclick="openPartOfferModal(' + o.id + ')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3 py-2 rounded-xl"><i class="fa-solid fa-boxes-packing mr-1"></i>Запропонувати запчастини</button>'
+            ) +
+            '<button onclick="openNewOrderModal(' + o.id + ')" class="bg-gray-700 text-gray-200 text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-pen mr-1"></i>Редагувати / Знижка</button>' +
+            (cl.id ? '<button onclick="openManagerChat(' + cl.id + ')" class="bg-gray-700 text-gray-200 text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-comments mr-1"></i>Чат</button>' : '') +
+            (cl.id ? '<button onclick="openClientCard(' + cl.id + ')" class="bg-gray-700 text-gray-200 text-xs px-3 py-2 rounded-xl">Картка клієнта</button>' : '') +
+            '</div></div>';
+    }).join('');
+}
+
+function openClientCard(id) {
+    openCardId = id;
+    renderClientCard();
+    var m = document.getElementById('client-card-modal');
+    m.classList.remove('hidden'); m.classList.add('flex');
+}
+
+function closeClientCard() {
+    openCardId = null;
+    var m = document.getElementById('client-card-modal');
+    m.classList.add('hidden'); m.classList.remove('flex');
+}
+
+function cardOrderRow(o) {
+    var disc = orderDiscountAmount(o);
+    return '<div class="bg-gray-900/60 p-3 rounded-xl border border-gray-700/60 space-y-1.5">' +
+        '<div class="flex justify-between items-center gap-2"><span class="text-sm font-semibold text-white">#' + String(o.id).slice(-6) + ' · ' + esc(o.date) + '</span><div class="flex items-center gap-1.5">' + paidToggleHtml(o) + '<span class="text-xs px-2 py-0.5 rounded-full ' + statusBadge(o.status) + '">' + esc(o.status) + '</span></div></div>' +
+        (o.car ? '<div class="text-xs text-gray-300"><i class="fa-solid fa-car text-blue-400 mr-1"></i>' + esc(o.car) + '</div>' : '') +
+        (mgrItemsHtml(o) || '<div class="text-xs text-gray-400">' + esc((o.items && o.items[0]) ? o.items[0].desc : '') + '</div>') +
+        '<div class="flex justify-between items-center pt-1"><span class="text-emerald-400 text-sm font-semibold">' + orderSum(o).toFixed(2) + ' грн' + (disc > 0 ? ' <span class="text-xs text-amber-300 font-normal">(-' + o.discountPct + '%)</span>' : '') + '</span><div class="flex items-center gap-2">' + statusSelectHtml(o) + '<button onclick="openNewOrderModal(' + o.id + ')" class="text-gray-400" title="Редагувати"><i class="fa-solid fa-pen"></i></button><button onclick="openInvoice(' + o.id + ')" class="text-blue-400"><i class="fa-solid fa-print"></i></button></div></div></div>';
+}
+
+function renderClientCard() {
+    var c = db.clients.find(function(x) { return x.id === openCardId; });
+    if (!c) { closeClientCard(); return; }
+    document.getElementById('cc-name').innerText = c.name;
+    var ph = document.getElementById('cc-phone');
+    ph.innerText = c.phone; ph.href = 'tel:' + c.phone;
+    document.getElementById('cc-disc').innerText = 'Накопичувальна знижка: ' + getClientDiscount(c.id) + '% · Загалом покупок на: ' + getClientTotalSpent(c.id).toFixed(2) + ' грн';
+
+    var vehs = getVehicles(c);
+    document.getElementById('cc-vehicles').innerHTML = vehs.length ? vehs.map(function(v, i) {
+        return '<div class="bg-gray-900/60 p-3 rounded-xl border border-gray-700/60 flex justify-between items-center"><div><div class="text-sm font-bold text-white">' + esc(v.car) + '</div><div class="text-xs text-blue-400 font-mono">' + esc(v.plate) + '</div></div><button onclick="mgrDeleteVehicle(' + i + ')" class="text-red-400 p-2"><i class="fa-solid fa-trash"></i></button></div>';
+    }).join('') : '<p class="text-gray-500 text-sm">Авто не додано</p>';
+
+    var mine = db.orders.filter(function(o) { return o.clientId === c.id || o.clientPhone === c.phone; }).sort(function(a, b) { return a.date < b.date ? 1 : -1; });
+    var cur = mine.filter(function(o) { return o.status !== 'Видано'; });
+    var past = mine.filter(function(o) { return o.status === 'Видано'; });
+    document.getElementById('cc-current').innerHTML = cur.length ? cur.map(cardOrderRow).join('') : '<p class="text-gray-500 text-sm">Немає активних замовлень</p>';
+    document.getElementById('cc-past').innerHTML = past.length ? past.map(cardOrderRow).join('') : '<p class="text-gray-500 text-sm">Архів порожній</p>';
+}
+
+function mgrAddVehicle(e) {
+    e.preventDefault();
+    var c = db.clients.find(function(x) { return x.id === openCardId; });
+    if (!c) return;
+    var car = document.getElementById('cc-model').value.trim();
+    var plate = document.getElementById('cc-plate').value.trim().toUpperCase();
+    c.vehicles = getVehicles(c).slice();
+    c.vehicles.push({car: car, plate: plate});
+    c.car = car; c.plate = plate;
+    touchClient(c);
+    saveDb();
+    document.getElementById('cc-model').value = '';
+    document.getElementById('cc-plate').value = '';
+    renderClientCard();
+    if (activeTab === 'clients') renderClients();
+}
+
+function mgrDeleteVehicle(i) {
+    var c = db.clients.find(function(x) { return x.id === openCardId; });
+    if (!c || !confirm("Видалити автомобіль?")) return;
+    c.vehicles = getVehicles(c).slice();
+    c.vehicles.splice(i, 1);
+    c.car = c.vehicles.length ? c.vehicles[0].car : "Не вказано";
+    c.plate = c.vehicles.length ? c.vehicles[0].plate : "------";
+    touchClient(c);
+    saveDb();
+    renderClientCard();
+    if (activeTab === 'clients') renderClients();
+}
+
+initApp();// ================= ФІКС СПОВІЩЕНЬ ЧАТУ, БЕЙДЖІВ ТА ДАШБОРДУ =================
+
+// Надійна нормалізація номера (порівнює останні 9 цифр, щоб +38067... і 067... завжди збігалися)
+function phoneKey(p) {
+    var d = String(p || '').replace(/\D/g, '');
+    return d.length >= 9 ? d.slice(-9) : d;
+}
+
+function getClientUnreadCount(phone) {
+    var pk = phoneKey(phone);
+    if (!pk) return 0;
+    var lastRead = Number(readStateClient[pk] || readStateClient[phone] || 0);
+    var count = 0;
+    (db.messages || []).forEach(function(m) {
+        if (phoneKey(m.phone) === pk && m.sender === 'manager' && Number(m.id) > lastRead) {
+            count++;
+        }
+    });
+    return count;
+}
+
+function getMgrUnreadForPhone(phone) {
+    var pk = phoneKey(phone);
+    if (!pk) return 0;
+    var lastRead = Number(readStateMgr[pk] || readStateMgr[phone] || 0);
+    var count = 0;
+    (db.messages || []).forEach(function(m) {
+        if (phoneKey(m.phone) === pk && m.sender === 'client' && Number(m.id) > lastRead) {
+            count++;
+        }
+    });
+    return count;
+}
+
+function getMgrTotalUnread() {
+    var seen = {}, total = 0;
+    (db.messages || []).forEach(function(m) {
+        var pk = phoneKey(m.phone);
+        if (m.sender === 'client' && pk && !seen[pk]) {
+            seen[pk] = m.phone;
+            total += getMgrUnreadForPhone(m.phone);
+        }
+    });
+    return total;
+}
+
+function markClientChatRead(phone) {
+    var pk = phoneKey(phone);
+    if (!pk) return;
+    var maxId = Number(readStateClient[pk] || 0);
+    (db.messages || []).forEach(function(m) {
+        if (phoneKey(m.phone) === pk && Number(m.id) > maxId) maxId = Number(m.id);
+    });
+    readStateClient[pk] = maxId;
+    readStateClient[phone] = maxId;
+    saveReadStateClient();
+}
+
+function markMgrChatRead(phone) {
+    var pk = phoneKey(phone);
+    if (!pk) return;
+    var maxId = Number(readStateMgr[pk] || 0);
+    (db.messages || []).forEach(function(m) {
+        if (phoneKey(m.phone) === pk && Number(m.id) > maxId) maxId = Number(m.id);
+    });
+    readStateMgr[pk] = maxId;
+    readStateMgr[phone] = maxId;
+    saveReadStateMgr();
+}
+
+// Примусове оформлення червоного кружечка-значка (не перебивається CSS-темою)
+function styleRedBadge(el, count) {
+    if (!el) return;
+    if (count > 0) {
+        el.innerText = count > 99 ? '99+' : String(count);
+        el.classList.remove('hidden');
+        el.style.cssText = 'display:flex!important;align-items:center;justify-content:center;position:absolute;top:-6px;right:-6px;background:#ef4444!important;color:#ffffff!important;font-size:10px!important;font-weight:800!important;border-radius:9999px;min-width:20px;height:20px;padding:0 5px;border:2px solid #ffffff;box-shadow:0 2px 6px rgba(239,68,68,0.6);z-index:20;';
+    } else {
+        el.classList.add('hidden');
+        el.style.cssText = 'display:none!important;';
+    }
+}
+
+// Оновлення значка на вкладці "Чат" у Клієнта + великий банер над замовленнями
+updateClientChatBadge = function() {
+    if (!currentClient) return;
+    var badge = document.getElementById('client-chat-badge');
+    var chatBtn = document.getElementById('c-btn-chat');
+    if (chatBtn) chatBtn.style.position = 'relative';
+
+    var chatOpen = !document.getElementById('c-tab-chat').classList.contains('hidden');
+    if (chatOpen) {
+        markClientChatRead(currentClient.phone);
+        styleRedBadge(badge, 0);
+        renderClientUnreadBanner();
+        return;
+    }
+    var unread = getClientUnreadCount(currentClient.phone);
+    styleRedBadge(badge, unread);
+    renderClientUnreadBanner();
+};
+
+renderClientUnreadBanner = function() {
+    if (!currentClient) return;
+    var existing = document.getElementById('client-unread-banner');
+    var unread = getClientUnreadCount(currentClient.phone);
+    if (unread <= 0) {
+        if (existing) existing.remove();
+        return;
+    }
+    var pk = phoneKey(currentClient.phone);
+    var msgs = (db.messages || []).filter(function(m) { return phoneKey(m.phone) === pk && m.sender === 'manager'; });
+    var lastMsg = msgs[msgs.length - 1];
+    var preview = lastMsg ? (lastMsg.imgId || lastMsg.image ? '📷 Надіслано фото' : esc(lastMsg.text)) : '';
+
+    var html = '<div id="client-unread-banner" onclick="switchClientTab(\'chat\')" style="background:linear-gradient(135deg,#dc2626,#b91c1c)!important;color:#ffffff!important;" class="cursor-pointer p-4 rounded-2xl shadow-lg flex items-center justify-between gap-3 mb-4">' +
+        '<div class="flex items-center gap-3 min-w-0" style="color:#ffffff!important;">' +
+            '<div style="background:rgba(255,255,255,0.2);color:#ffffff!important;" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"><i class="fa-solid fa-comments text-lg"></i></div>' +
+            '<div class="min-w-0" style="color:#ffffff!important;">' +
+                '<div style="color:#ffffff!important;" class="text-xs font-extrabold uppercase tracking-wider">💬 Нових повідомлень від менеджера: ' + unread + '</div>' +
+                '<div style="color:#fef2f2!important;" class="text-xs truncate mt-0.5">' + preview + '</div>' +
+            '</div>' +
+        '</div>' +
+        '<span style="background:#ffffff!important;color:#dc2626!important;" class="text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap shadow">Читати →</span>' +
+    '</div>';
+
+    if (existing) existing.outerHTML = html;
+    else {
+        var ordersSec = document.getElementById('c-tab-orders');
+        if (ordersSec) ordersSec.insertAdjacentHTML('afterbegin', html);
+    }
+};
+
+// Список усіх клієнтів, які написали і чиї повідомлення ще не прочитані менеджером
+getUnreadClientDialogs = function() {
+    var byKey = {};
+    (db.messages || []).forEach(function(m) {
+        if (m.sender === 'client' && m.phone) {
+            var pk = phoneKey(m.phone);
+            var lastRead = Number(readStateMgr[pk] || readStateMgr[m.phone] || 0);
+            if (Number(m.id) > lastRead) {
+                if (!byKey[pk]) byKey[pk] = { phone: m.phone, unread: 0, lastMsg: m };
+                byKey[pk].unread++;
+                if (Number(m.id) >= Number(byKey[pk].lastMsg.id)) byKey[pk].lastMsg = m;
+            }
+        }
+    });
+    return Object.keys(byKey).map(function(pk) {
+        var d = byKey[pk];
+        var cl = db.clients.find(function(c) { return phoneKey(c.phone) === pk; });
+        return {
+            phone: cl ? cl.phone : d.phone,
+            clientId: cl ? cl.id : 0,
+            name: cl ? cl.name : ('Клієнт ' + d.phone),
+            car: cl ? (cl.car || '') : '',
+            unread: d.unread,
+            lastText: (d.lastMsg.imgId || d.lastMsg.image) ? '📷 Фото' : (d.lastMsg.text || ''),
+            time: d.lastMsg.time || '',
+            lastId: Number(d.lastMsg.id)
+        };
+    }).sort(function(a, b) { return b.lastId - a.lastId; });
+};
+
+// Оновлення всіх бейджів у Менеджера (вкладка "Нові", вкладка "Клієнти" та блок на Дашборді)
+updateNewBadge = function() {
+    var nOrders = 0;
+    for (var i = 0; i < db.orders.length; i++) {
+        if (db.orders[i].status === 'Нове' || db.orders[i].status === 'Очікує підтвердження') nOrders++;
+    }
+    var nChat = getMgrTotalUnread();
+    var totalNew = nOrders + nChat;
+
+    var btnNew = document.getElementById('btn-new');
+    if (btnNew) btnNew.style.position = 'relative';
+    var b = document.getElementById('new-badge');
+    styleRedBadge(b, totalNew);
+
+    var btnClients = document.getElementById('btn-clients');
+    if (btnClients) btnClients.style.position = 'relative';
+    var cb = ensureMgrChatBadgeEl();
+    styleRedBadge(cb, nChat);
+
+    if ((lastNewCount >= 0 && nOrders > lastNewCount) || (prevMgrUnread >= 0 && nChat > prevMgrUnread)) {
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    }
+    lastNewCount = nOrders;
+    prevMgrUnread = nChat;
+
+    renderMgrDashboardUnread();
+};
+
+// Блок "Останні непрочитані повідомлення" прямо на Дашборді Менеджера
+function renderMgrDashboardUnread() {
+    var dash = document.getElementById('tab-dashboard');
+    if (!dash) return;
+    var existing = document.getElementById('mgr-dash-unread-box');
+    var unreadDialogs = getUnreadClientDialogs();
+
+    if (!unreadDialogs.length) {
+        if (existing) existing.remove();
+        return;
+    }
+
+    var rowsHtml = unreadDialogs.map(function(d) {
+        return '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-3.5 rounded-xl border border-gray-300 shadow-sm">' +
+            '<div class="min-w-0">' +
+                '<div class="flex flex-wrap items-center gap-2">' +
+                    '<span class="font-bold text-sm" style="color:#1a1a1a!important;">' + esc(d.name) + '</span>' +
+                    '<span style="background:#ef4444!important;color:#ffffff!important;" class="text-[11px] font-extrabold px-2 py-0.5 rounded-full">💬 ' + d.unread + ' нов.</span>' +
+                    '<span class="text-xs" style="color:#8f6f33!important;">' + esc(d.phone) + '</span>' +
+                '</div>' +
+                '<div class="text-xs mt-1 truncate" style="color:#4a463f!important;">Останнє (' + esc(d.time) + '): <b>' + esc(d.lastText) + '</b></div>' +
+            '</div>' +
+            '<button type="button" onclick="openManagerChatByPhone(\'' + esc(d.phone) + '\')" style="background:#ef4444!important;color:#ffffff!important;" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap shadow">' +
+                '<i class="fa-solid fa-comments mr-1"></i>Відкрити чат' +
+            '</button>' +
+        '</div>';
+    }).join('');
+
+    var html = '<div id="mgr-dash-unread-box" style="border:2px solid #ef4444!important;background:#fff5f5!important;" class="rounded-2xl p-4 sm:p-5 shadow-md space-y-3 mb-6">' +
+        '<div class="flex justify-between items-center">' +
+            '<h3 class="text-sm sm:text-base font-extrabold flex items-center gap-2" style="color:#dc2626!important;">' +
+                '<i class="fa-solid fa-bell fa-shake"></i>' +
+                '<span>Непрочитані повідомлення в чаті (' + getMgrTotalUnread() + ')</span>' +
+            '</h3>' +
+        '</div>' +
+        '<div class="space-y-2">' + rowsHtml + '</div>' +
+    '</div>';
+
+    if (existing) existing.outerHTML = html;
+    else dash.insertAdjacentHTML('afterbegin', html);
+}
+
+// Дописуємо виклик блоку непрочитаних у сам updateDashboard
+var _baseUpdateDashboard = updateDashboard;
+updateDashboard = function() {
+    _baseUpdateDashboard();
+    renderMgrDashboardUnread();
+};
+
+// Оновлюємо список клієнтів, щоб червона позначка біля клієнта була яскравою і не перебивалася CSS
+var _baseRenderClients = renderClients;
+renderClients = function() {
+    var query = (document.getElementById('client-search').value || '').toLowerCase();
+    var tbody = document.getElementById('clients-table-body');
+    var list = db.clients.slice().sort(function(a, b) {
+        return getMgrUnreadForPhone(b.phone) - getMgrUnreadForPhone(a.phone);
+    });
+    var html = '';
+    for (var i = 0; i < list.length; i++) {
+        var c = list[i];
+        var disc = getClientDiscount(c.id);
+        var spent = getClientTotalSpent(c.id);
+        var unread = getMgrUnreadForPhone(c.phone);
+        if ((c.name + ' ' + c.phone + ' ' + (c.car || '') + ' ' + (c.plate || '')).toLowerCase().indexOf(query) !== -1) {
+            var vc = getVehicles(c).length;
+            var nameBadge = unread > 0
+                ? ' <span style="background:#ef4444!important;color:#ffffff!important;" class="inline-flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded-full ml-1.5 shadow">💬 ' + unread + ' нов.</span>'
+                : '';
+            var chatBtn = '<button onclick="event.stopPropagation();openManagerChat(' + c.id + ')" style="' + (unread > 0 ? 'background:#ef4444!important;color:#ffffff!important;' : '') + '" class="relative inline-flex items-center justify-center px-2.5 py-2 rounded-xl text-blue-400 mr-2" title="Чат з клієнтом">' +
+                '<i class="fa-solid fa-comments"></i>' +
+                (unread > 0 ? '<span class="ml-1 text-xs font-extrabold" style="color:#ffffff!important;">' + unread + '</span>' : '') +
+                '</button>';
+
+            html += '<tr class="hover:bg-gray-700/30 cursor-pointer" style="' + (unread > 0 ? 'background:#fff5f5!important;' : '') + '" onclick="openClientCard(' + c.id + ')">' +
+                '<td class="p-3">#' + String(c.id).slice(-5) + '</td>' +
+                '<td class="p-3"><div class="font-bold text-white flex flex-wrap items-center">' + esc(c.name) + nameBadge + '</div><span class="text-xs text-blue-400">' + esc(c.phone) + '</span></td>' +
+                '<td class="p-3">' + esc(c.car || '—') + '<br><span class="text-xs text-gray-400 font-mono">' + esc(c.plate || '') + '</span>' + (vc > 1 ? '<br><span class="text-[11px] text-gray-500">+ ще авто: ' + (vc - 1) + '</span>' : '') + '</td>' +
+                '<td class="p-3"><span class="text-emerald-400 font-bold">' + disc + '%</span><br><span class="text-[11px] text-gray-400">' + spent.toFixed(0) + ' грн</span></td>' +
+                '<td class="p-3 text-right whitespace-nowrap">' + chatBtn + '<button onclick="event.stopPropagation();editClient(' + c.id + ')" class="text-gray-400 mr-2" title="Редагувати"><i class="fa-solid fa-pen"></i></button><button onclick="event.stopPropagation();deleteClient(' + c.id + ')" class="text-red-400" title="Видалити"><i class="fa-solid fa-trash"></i></button></td></tr>';
+        }
+    }
+    tbody.innerHTML = html || '<tr><td colspan="5" class="p-4 text-center text-gray-500">Порожньо</td></tr>';
+};
+</script>
+</body>
+</html>
